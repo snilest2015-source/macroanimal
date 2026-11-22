@@ -94,7 +94,7 @@
     <header class="border-b border-natgeo-cardBorder bg-natgeo-dark/95 backdrop-blur-md sticky top-0 z-50 px-4 py-3 sm:px-8">
         <div class="max-w-6xl mx-auto flex items-center justify-between gap-2">
             <!-- Логотип в стиле National Geographic -->
-            <button onclick="goToStartScreen()" class="flex items-center gap-3 text-left group focus:outline-none">
+            <button onclick="goToStartScreen()" class="flex items-center gap-3 text-left group focus:outline-none cursor-pointer">
                 <div class="w-6 h-9 border-4 border-natgeo-yellow bg-transparent flex-shrink-0 group-hover:scale-105 transition-transform"></div>
                 <div>
                     <h1 class="text-lg sm:text-xl font-extrabold tracking-wider text-white font-oswald uppercase flex items-center gap-2">
@@ -106,11 +106,11 @@
             
             <!-- Кнопки управления в шапке -->
             <div class="flex items-center gap-2 sm:gap-3">
-                <button onclick="togglePhotoEditor()" class="px-3 py-1.5 rounded-lg bg-natgeo-card hover:bg-natgeo-slate border border-natgeo-cardBorder text-gray-200 hover:text-natgeo-yellow text-xs font-bold transition-all flex items-center gap-2" title="Заменить фотографии или добавить свои">
+                <button onclick="togglePhotoEditor()" class="px-3 py-1.5 rounded-lg bg-natgeo-card hover:bg-natgeo-slate border border-natgeo-cardBorder text-gray-200 hover:text-natgeo-yellow text-xs font-bold transition-all flex items-center gap-2 cursor-pointer" title="Заменить фотографии или добавить свои">
                     <i class="fa-solid fa-images text-natgeo-yellow text-sm"></i>
                     <span class="hidden md:inline">Мои фото / Редактор</span>
                 </button>
-                <button onclick="toggleHostMode()" class="px-3 py-1.5 rounded-lg bg-natgeo-slate hover:bg-natgeo-yellow hover:text-black border border-natgeo-cardBorder text-natgeo-yellow text-xs font-bold transition-all flex items-center gap-2">
+                <button onclick="toggleHostMode()" class="px-3 py-1.5 rounded-lg bg-natgeo-slate hover:bg-natgeo-yellow hover:text-black border border-natgeo-cardBorder text-natgeo-yellow text-xs font-bold transition-all flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-qrcode text-sm"></i>
                     <span class="hidden sm:inline">Экран ведущего / Рейтинг</span>
                 </button>
@@ -419,7 +419,7 @@
                 <div>
                     <h2 class="text-2xl sm:text-3xl font-bold text-white font-oswald uppercase flex flex-wrap items-center gap-3">
                         <span>Таблица лидеров & QR-Код</span>
-                        <span class="text-xs font-sans px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-semibold">Обновление онлайн</span>
+                        <span id="sync-status-badge" class="text-xs font-sans px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-semibold">Подключение...</span>
                     </h2>
                     <p class="text-xs text-natgeo-textMuted mt-1">Экран ведущего для трансляции результатов и подключения участников</p>
                 </div>
@@ -476,12 +476,12 @@
                     </h3>
 
                     <div class="flex flex-wrap gap-1.5" id="leaderboard-filters">
-                        <button onclick="setLeaderboardFilter('all')" data-filter="all" class="lb-filter-btn px-2.5 py-1 rounded-md text-xs font-bold bg-natgeo-yellow text-black transition-all">Все</button>
-                        <button onclick="setLeaderboardFilter('clothes')" data-filter="clothes" class="lb-filter-btn px-2.5 py-1 rounded-md text-xs font-bold bg-natgeo-slate text-natgeo-textMuted hover:text-white transition-all">Одежда</button>
-                        <button onclick="setLeaderboardFilter('eyes')" data-filter="eyes" class="lb-filter-btn px-2.5 py-1 rounded-md text-xs font-bold bg-natgeo-slate text-natgeo-textMuted hover:text-white transition-all">Глаза</button>
-                        <button onclick="setLeaderboardFilter('paws')" data-filter="paws" class="lb-filter-btn px-2.5 py-1 rounded-md text-xs font-bold bg-natgeo-slate text-natgeo-textMuted hover:text-white transition-all">Лапы</button>
-                        <button onclick="setLeaderboardFilter('teeth')" data-filter="teeth" class="lb-filter-btn px-2.5 py-1 rounded-md text-xs font-bold bg-natgeo-slate text-natgeo-textMuted hover:text-white transition-all">Зубы</button>
-                        <button onclick="setLeaderboardFilter('mix')" data-filter="mix" class="lb-filter-btn px-2.5 py-1 rounded-md text-xs font-bold bg-natgeo-slate text-natgeo-textMuted hover:text-white transition-all">Микс</button>
+                        <button onclick="setLeaderboardFilter('all')" data-filter="all" class="lb-filter-btn px-2.5 py-1 rounded-md text-xs font-bold bg-natgeo-yellow text-black transition-all cursor-pointer">Все</button>
+                        <button onclick="setLeaderboardFilter('clothes')" data-filter="clothes" class="lb-filter-btn px-2.5 py-1 rounded-md text-xs font-bold bg-natgeo-slate text-natgeo-textMuted hover:text-white transition-all cursor-pointer">Одежда</button>
+                        <button onclick="setLeaderboardFilter('eyes')" data-filter="eyes" class="lb-filter-btn px-2.5 py-1 rounded-md text-xs font-bold bg-natgeo-slate text-natgeo-textMuted hover:text-white transition-all cursor-pointer">Глаза</button>
+                        <button onclick="setLeaderboardFilter('paws')" data-filter="paws" class="lb-filter-btn px-2.5 py-1 rounded-md text-xs font-bold bg-natgeo-slate text-natgeo-textMuted hover:text-white transition-all cursor-pointer">Лапы</button>
+                        <button onclick="setLeaderboardFilter('teeth')" data-filter="teeth" class="lb-filter-btn px-2.5 py-1 rounded-md text-xs font-bold bg-natgeo-slate text-natgeo-textMuted hover:text-white transition-all cursor-pointer">Зубы</button>
+                        <button onclick="setLeaderboardFilter('mix')" data-filter="mix" class="lb-filter-btn px-2.5 py-1 rounded-md text-xs font-bold bg-natgeo-slate text-natgeo-textMuted hover:text-white transition-all cursor-pointer">Микс</button>
                     </div>
                 </div>
 
@@ -505,7 +505,7 @@
             </div>
         </section>
 
-        <!-- 5. ВСТРОЕННЫЙ РЕДАКТОР КАРТИНОК (ДЛЯ БЫСТРОЙ ПОДСТАНОВКИ СВОИХ ФОТО БЕЗ ПРАВКИ КОДА) -->
+        <!-- 5. ВСТРОЕННЫЙ РЕДАКТОР КАРТИНОК -->
         <section id="editor-screen" class="hidden space-y-6 w-full">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-natgeo-cardBorder pb-4">
                 <div>
@@ -529,10 +529,10 @@
 
             <!-- Вкладки рубрик в редакторе -->
             <div class="flex flex-wrap gap-2" id="editor-tabs">
-                <button onclick="renderEditorCategory('clothes')" data-ed-cat="clothes" class="ed-tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-natgeo-yellow text-black">Узнай, чья одежда</button>
-                <button onclick="renderEditorCategory('eyes')" data-ed-cat="eyes" class="ed-tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-natgeo-card border border-natgeo-cardBorder text-white">Узнай, чей глаз</button>
-                <button onclick="renderEditorCategory('paws')" data-ed-cat="paws" class="ed-tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-natgeo-card border border-natgeo-cardBorder text-white">Узнай, чья лапа</button>
-                <button onclick="renderEditorCategory('teeth')" data-ed-cat="teeth" class="ed-tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-natgeo-card border border-natgeo-cardBorder text-white">Узнай, чей зуб</button>
+                <button onclick="renderEditorCategory('clothes')" data-ed-cat="clothes" class="ed-tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-natgeo-yellow text-black cursor-pointer">Узнай, чья одежда</button>
+                <button onclick="renderEditorCategory('eyes')" data-ed-cat="eyes" class="ed-tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-natgeo-card border border-natgeo-cardBorder text-white cursor-pointer">Узнай, чей глаз</button>
+                <button onclick="renderEditorCategory('paws')" data-ed-cat="paws" class="ed-tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-natgeo-card border border-natgeo-cardBorder text-white cursor-pointer">Узнай, чья лапа</button>
+                <button onclick="renderEditorCategory('teeth')" data-ed-cat="teeth" class="ed-tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-natgeo-card border border-natgeo-cardBorder text-white cursor-pointer">Узнай, чей зуб</button>
             </div>
 
             <div id="editor-questions-list" class="space-y-4"></div>
@@ -548,64 +548,72 @@
         </div>
     </footer>
 
-    <!-- Скрипт синхронизации (Firebase + автономный режим в памяти/браузере) -->
+    <!-- Скрипт синхронизации (Firebase + резервный локальный режим) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'natgeo-close-up-quiz-ru';
-        const hasFirebaseConfig = typeof __firebase_config !== 'undefined' && __firebase_config;
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-fkczqYdDhSkH7tTz3V8S3FFzhkCHKVI",
+            authDomain: "animal-quiz-9708a.firebaseapp.com",
+            projectId: "animal-quiz-9708a",
+            storageBucket: "animal-quiz-9708a.firebasestorage.app",
+            messagingSenderId: "667501151229",
+            appId: "1:667501151229:web:2087808f66dec78f798f94",
+            measurementId: "G-3Z8QLZW8EP"
+        };
 
         let currentUser = null;
         let db = null;
         let resultsCollectionRef = null;
+        let isCloudActive = false;
 
-        // Локальное хранилище текущей сессии (на случай запуска файла локально без сервера)
         window.sessionLeaderboardResults = [];
 
-        async function initStorage() {
-            if (!hasFirebaseConfig) {
-                window.updateLeaderboardData(window.sessionLeaderboardResults);
-                return;
+        function setSyncBadge(online) {
+            const badge = document.getElementById('sync-status-badge');
+            if (!badge) return;
+            if (online) {
+                badge.textContent = "Обновление онлайн";
+                badge.className = "text-xs font-sans px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-semibold";
+            } else {
+                badge.textContent = "Локальный режим";
+                badge.className = "text-xs font-sans px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-semibold";
             }
+        }
 
+        async function initStorage() {
             try {
-                const firebaseConfig = {
-  apiKey: "AIzaSyD-fkczqYdDhSkH7tTz3V8S3FFzhkCHKVI",
-  authDomain: "animal-quiz-9708a.firebaseapp.com",
-  projectId: "animal-quiz-9708a",
-  storageBucket: "animal-quiz-9708a.firebasestorage.app",
-  messagingSenderId: "667501151229",
-  appId: "1:667501151229:web:2087808f66dec78f798f94",
-  measurementId: "G-3Z8QLZW8EP"
-};
-
-const app = initializeApp(firebaseConfig);
+                const app = initializeApp(firebaseConfig);
                 const auth = getAuth(app);
                 db = getFirestore(app);
                 resultsCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'quiz_results_ru');
 
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    const credentials = await signInWithCustomToken(auth, __initial_auth_token);
-                    currentUser = credentials.user;
-                } else {
-                    const credentials = await signInAnonymously(auth);
-                    currentUser = credentials.user;
-                }
+                const credentials = await signInAnonymously(auth);
+                currentUser = credentials.user;
 
                 onSnapshot(resultsCollectionRef, (snapshot) => {
+                    isCloudActive = true;
+                    setSyncBadge(true);
                     const results = [];
                     snapshot.forEach((docSnap) => {
                         results.push({ id: docSnap.id, ...docSnap.data() });
                     });
+                    window.sessionLeaderboardResults = results;
                     window.updateLeaderboardData(results);
                 }, (error) => {
-                    console.error("Ошибка чтения таблицы лидеров:", error);
+                    console.warn("Ошибка чтения Firestore (проверьте Rules в консоли Firebase):", error);
+                    isCloudActive = false;
+                    setSyncBadge(false);
                     window.updateLeaderboardData(window.sessionLeaderboardResults);
                 });
             } catch (err) {
                 console.warn("Работа в автономном режиме:", err);
+                isCloudActive = false;
+                setSyncBadge(false);
                 window.updateLeaderboardData(window.sessionLeaderboardResults);
             }
         }
@@ -625,37 +633,35 @@ const app = initializeApp(firebaseConfig);
                 })
             };
 
-            // Добавляем в память текущей сессии
-            window.sessionLeaderboardResults.push(entry);
-            window.updateLeaderboardData(window.sessionLeaderboardResults);
-
-            // Если подключено облако — сохраняем и туда
-            if (currentUser && resultsCollectionRef) {
+            if (currentUser && resultsCollectionRef && isCloudActive) {
                 try {
                     await addDoc(resultsCollectionRef, entry);
+                    return;
                 } catch (err) {
-                    console.error("Ошибка сохранения результата:", err);
+                    console.warn("Не удалось сохранить в облако, сохраняю локально:", err);
                 }
             }
+
+            window.sessionLeaderboardResults.push(entry);
+            window.updateLeaderboardData(window.sessionLeaderboardResults);
         };
 
         window.clearLeaderboard = async function() {
             window.sessionLeaderboardResults = [];
             window.updateLeaderboardData([]);
 
-            if (currentUser && resultsCollectionRef && db) {
+            if (currentUser && resultsCollectionRef && db && isCloudActive) {
                 try {
                     const snapshot = await getDocs(resultsCollectionRef);
                     const deletePromises = snapshot.docs.map(d => deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'quiz_results_ru', d.id)));
                     await Promise.all(deletePromises);
                 } catch (err) {
-                    console.error("Ошибка очистки данных:", err);
+                    console.error("Ошибка очистки данных в Firestore:", err);
                 }
             }
         };
 
         initStorage();
-		
     </script>
 
     <!-- Данные квиза по 4 рубрикам и вся игровая логика -->
@@ -679,9 +685,7 @@ const app = initializeApp(firebaseConfig);
                 questions: [
                     {
                         name: "Бенгальский тигр",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
                         closeUrl: "https://images.unsplash.com/photo-1534188753412-3e26d0d618d6?q=80&w=800&auto=format&fit=crop",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
                         fullUrl: "https://images.unsplash.com/photo-1561731216-c3a4d99437d5?q=80&w=1000&auto=format&fit=crop",
                         options: ["Бенгальский тигр", "Зебра", "Гепард", "Ягуар"],
                         correct: 0,
@@ -689,9 +693,7 @@ const app = initializeApp(firebaseConfig);
                     },
                     {
                         name: "Павлин",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
                         closeUrl: "https://images.unsplash.com/photo-1522850403397-b0c8f2f75451?q=80&w=800&auto=format&fit=crop",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
                         fullUrl: "https://images.unsplash.com/photo-1536514072410-5019a3c69182?q=80&w=1000&auto=format&fit=crop",
                         options: ["Попугай Ара", "Колибри", "Павлин", "Кетцаль"],
                         correct: 2,
@@ -699,9 +701,7 @@ const app = initializeApp(firebaseConfig);
                     },
                     {
                         name: "Зебра",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
                         closeUrl: "https://images.unsplash.com/photo-1501706362039-c06b2d715385?q=80&w=800&auto=format&fit=crop",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
                         fullUrl: "https://images.unsplash.com/photo-1526095179574-86e545848d30?q=80&w=1000&auto=format&fit=crop",
                         options: ["Зебра", "Окапи", "Тигр", "Кошачий лемур"],
                         correct: 0,
@@ -709,9 +709,7 @@ const app = initializeApp(firebaseConfig);
                     },
                     {
                         name: "Леопард",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
                         closeUrl: "https://images.unsplash.com/photo-1534567153574-2b12153a87f0?q=80&w=800&auto=format&fit=crop",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
                         fullUrl: "https://images.unsplash.com/photo-1456926631375-92c8ce872def?q=80&w=1000&auto=format&fit=crop",
                         options: ["Гепард", "Леопард", "Оцелот", "Сервал"],
                         correct: 1,
@@ -719,9 +717,7 @@ const app = initializeApp(firebaseConfig);
                     },
                     {
                         name: "Жираф",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
                         closeUrl: "https://images.unsplash.com/photo-1547721064-da6cfb341d50?q=80&w=800&auto=format&fit=crop",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
                         fullUrl: "https://images.unsplash.com/photo-1547721064-da6cfb341d50?q=80&w=1000&auto=format&fit=crop",
                         options: ["Жираф", "Питон", "Гиеновидная собака", "Гепард"],
                         correct: 0,
@@ -740,9 +736,7 @@ const app = initializeApp(firebaseConfig);
                 questions: [
                     {
                         name: "Хамелеон",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
                         closeUrl: "https://images.unsplash.com/photo-1504450758481-7338eba7524a?q=80&w=800&auto=format&fit=crop",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
                         fullUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1000&auto=format&fit=crop",
                         options: ["Зеленая игуана", "Хамелеон", "Комодский варан", "Геккон"],
                         correct: 1,
@@ -750,9 +744,7 @@ const app = initializeApp(firebaseConfig);
                     },
                     {
                         name: "Красноглазая квакша",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
                         closeUrl: "https://images.unsplash.com/photo-1550147760-44c9966d6bc7?q=80&w=800&auto=format&fit=crop",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
                         fullUrl: "https://images.unsplash.com/photo-1602491453631-e2a5ad90a131?q=80&w=1000&auto=format&fit=crop",
                         options: ["Древолаз", "Красноглазая квакша", "Жаба-ага", "Тритон"],
                         correct: 1,
@@ -760,9 +752,7 @@ const app = initializeApp(firebaseConfig);
                     },
                     {
                         name: "Филин",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
                         closeUrl: "https://images.unsplash.com/photo-1543549790-8b5f4a028cfb?q=80&w=800&auto=format&fit=crop",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
                         fullUrl: "https://images.unsplash.com/photo-1543549790-8b5f4a028cfb?q=80&w=1000&auto=format&fit=crop",
                         options: ["Беркут", "Филин", "Ястреб-тетеревятник", "Кондор"],
                         correct: 1,
@@ -770,9 +760,7 @@ const app = initializeApp(firebaseConfig);
                     },
                     {
                         name: "Нильский крокодил",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
                         closeUrl: "https://images.unsplash.com/photo-1529257414772-1960b7bea4eb?q=80&w=800&auto=format&fit=crop",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
                         fullUrl: "https://images.unsplash.com/photo-1529257414772-1960b7bea4eb?q=80&w=1000&auto=format&fit=crop",
                         options: ["Нильский крокодил", "Комодский варан", "Анаконда", "Каймановая черепаха"],
                         correct: 0,
@@ -780,9 +768,7 @@ const app = initializeApp(firebaseConfig);
                     },
                     {
                         name: "Снежный барс (Ирбис)",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
                         closeUrl: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?q=80&w=800&auto=format&fit=crop",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
                         fullUrl: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?q=80&w=1000&auto=format&fit=crop",
                         options: ["Рысь", "Снежный барс (Ирбис)", "Пума", "Манул"],
                         correct: 1,
@@ -801,9 +787,7 @@ const app = initializeApp(firebaseConfig);
                 questions: [
                     {
                         name: "Африканский слон",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
                         closeUrl: "https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?q=80&w=800&auto=format&fit=crop",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
                         fullUrl: "https://images.unsplash.com/photo-1581852017103-68ac65514cf7?q=80&w=1000&auto=format&fit=crop",
                         options: ["Белый носорог", "Бегемот", "Африканский слон", "Мамонт"],
                         correct: 2,
@@ -811,9 +795,7 @@ const app = initializeApp(firebaseConfig);
                     },
                     {
                         name: "Зеленая морская черепаха",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
                         closeUrl: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=800&auto=format&fit=crop",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
                         fullUrl: "https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?q=80&w=1000&auto=format&fit=crop",
                         options: ["Морской котик", "Зеленая морская черепаха", "Пингвин", "Ламантин"],
                         correct: 1,
@@ -821,9 +803,7 @@ const app = initializeApp(firebaseConfig);
                     },
                     {
                         name: "Бурый медведь",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
                         closeUrl: "https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?q=80&w=800&auto=format&fit=crop",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
                         fullUrl: "https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?q=80&w=1000&auto=format&fit=crop",
                         options: ["Росомаха", "Бурый медведь", "Барсук", "Волк"],
                         correct: 1,
@@ -831,9 +811,7 @@ const app = initializeApp(firebaseConfig);
                     },
                     {
                         name: "Белый медведь",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
                         closeUrl: "https://images.unsplash.com/photo-1589656966895-2f33e7653819?q=80&w=800&auto=format&fit=crop",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
                         fullUrl: "https://images.unsplash.com/photo-1589656966895-2f33e7653819?q=80&w=1000&auto=format&fit=crop",
                         options: ["Песец", "Белый медведь", "Снежный волк", "Гренландский тюлень"],
                         correct: 1,
@@ -841,9 +819,7 @@ const app = initializeApp(firebaseConfig);
                     },
                     {
                         name: "Фламинго",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
                         closeUrl: "https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?q=80&w=800&auto=format&fit=crop",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
                         fullUrl: "https://images.unsplash.com/photo-1539418596647-7928236d9d15?q=80&w=1000&auto=format&fit=crop",
                         options: ["Цапля", "Журавль", "Фламинго", "Аист"],
                         correct: 2,
@@ -862,9 +838,7 @@ const app = initializeApp(firebaseConfig);
                 questions: [
                     {
                         name: "Бегемот (Гиппопотам)",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
                         closeUrl: "https://images.unsplash.com/photo-1534759846116-5799c33ce22a?q=80&w=800&auto=format&fit=crop",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
                         fullUrl: "https://images.unsplash.com/photo-1534759846116-5799c33ce22a?q=80&w=1000&auto=format&fit=crop",
                         options: ["Бегемот (Гиппопотам)", "Бородавочник", "Морж", "Носорог"],
                         correct: 0,
@@ -872,9 +846,7 @@ const app = initializeApp(firebaseConfig);
                     },
                     {
                         name: "Большая белая акула",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
                         closeUrl: "https://images.unsplash.com/photo-1560275619-4662e36fa65c?q=80&w=800&auto=format&fit=crop",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
                         fullUrl: "https://images.unsplash.com/photo-1560275619-4662e36fa65c?q=80&w=1000&auto=format&fit=crop",
                         options: ["Барракуда", "Большая белая акула", "Мурена", "Косатка"],
                         correct: 1,
@@ -882,9 +854,7 @@ const app = initializeApp(firebaseConfig);
                     },
                     {
                         name: "Африканский лев",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
                         closeUrl: "https://images.unsplash.com/photo-1546182990-dffeafbe841d?q=80&w=800&auto=format&fit=crop",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
                         fullUrl: "https://images.unsplash.com/photo-1546182990-dffeafbe841d?q=80&w=1000&auto=format&fit=crop",
                         options: ["Африканский лев", "Пятнистая гиена", "Волк", "Гепард"],
                         correct: 0,
@@ -892,9 +862,7 @@ const app = initializeApp(firebaseConfig);
                     },
                     {
                         name: "Морж",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
                         closeUrl: "https://images.unsplash.com/photo-1568430462989-44163eb1752f?q=80&w=800&auto=format&fit=crop",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
                         fullUrl: "https://images.unsplash.com/photo-1568430462989-44163eb1752f?q=80&w=1000&auto=format&fit=crop",
                         options: ["Нарвал", "Морж", "Морской лев", "Бабирусса"],
                         correct: 1,
@@ -902,9 +870,7 @@ const app = initializeApp(firebaseConfig);
                     },
                     {
                         name: "Обыкновенный бобр",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
                         closeUrl: "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?q=80&w=800&auto=format&fit=crop",
-                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
                         fullUrl: "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?q=80&w=1000&auto=format&fit=crop",
                         options: ["Обыкновенный бобр", "Капибара", "Дикобраз", "Нутрия"],
                         correct: 0,
@@ -1026,12 +992,11 @@ const app = initializeApp(firebaseConfig);
                 }));
             }
 
-            // Для режима "Все рубрики (Микс)" берем по 2-3 вопроса из каждой рубрики
             const mixed = [];
             const keys = ['clothes', 'eyes', 'paws', 'teeth'];
             keys.forEach((k, idx) => {
                 const cat = quizCategories[k];
-                const takeCount = idx < 2 ? 3 : 2; // 3 + 3 + 2 + 2 = 10 вопросов
+                const takeCount = idx < 2 ? 3 : 2;
                 cat.questions.slice(0, takeCount).forEach(q => {
                     mixed.push({
                         ...q,
@@ -1159,7 +1124,6 @@ const app = initializeApp(firebaseConfig);
                 liveScoreEl.textContent = score;
             }
 
-            // Показываем полный кадр животного
             animalImg.src = q.fullUrl;
             zoomStatus.textContent = "ПОЛНЫЙ КАДР";
             zoomIcon.className = "fa-solid fa-expand text-emerald-400";
@@ -1278,12 +1242,10 @@ const app = initializeApp(firebaseConfig);
             const winnerScore = document.getElementById('winner-score');
             const winnerTime = document.getElementById('winner-time');
 
-            // Фильтрация по рубрике
             let filtered = currentLeaderboardFilter === 'all'
                 ? [...allLeaderboardResults]
                 : allLeaderboardResults.filter(r => r.categoryKey === currentLeaderboardFilter);
 
-            // Сортировка: сначала по проценту/количеству очков, затем по наименьшему времени
             filtered.sort((a, b) => {
                 if (b.score !== a.score) return b.score - a.score;
                 return (a.timeSeconds || 9999) - (b.timeSeconds || 9999);
@@ -1387,7 +1349,7 @@ const app = initializeApp(firebaseConfig);
         }
 
         // ============================================================================
-        // ВСТРОЕННЫЙ РЕДАКТОР КАРТИНОК (ЧТОБЫ ПОЛЬЗОВАТЕЛЬНИЦА МОГЛА ЛЕГКО ВСТАВИТЬ СВОИ ФОТО)
+        // ВСТРОЕННЫЙ РЕДАКТОР КАРТИНОК
         // ============================================================================
         let currentEditorCategory = "clothes";
 
@@ -1440,7 +1402,7 @@ const app = initializeApp(firebaseConfig);
                                 <img id="preview-close-${catKey}-${idx}" src="${q.closeUrl}" onerror="window.handleImageFallback(this)"
                                     class="w-20 h-20 rounded-lg object-cover border border-natgeo-cardBorder bg-black flex-shrink-0">
                                 <div class="flex-grow space-y-2">
-                                    <input type="text" value="${q.closeUrl.startsWith('data:') ? '[Загруженный файл]' : q.closeUrl}"
+                                    <input type="text" value="${q.closeUrl.startsWith('data:') || q.closeUrl.startsWith('blob:') ? '[Локальный файл]' : q.closeUrl}"
                                         onchange="window.updateQuestionImageUrl('${catKey}', ${idx}, 'closeUrl', this.value)"
                                         placeholder="Вставьте ссылку https://... или путь"
                                         class="w-full px-3 py-2 bg-natgeo-dark border border-natgeo-cardBorder rounded-lg text-xs text-white focus:outline-none focus:border-natgeo-yellow">
@@ -1460,7 +1422,7 @@ const app = initializeApp(firebaseConfig);
                                 <img id="preview-full-${catKey}-${idx}" src="${q.fullUrl}" onerror="window.handleImageFallback(this)"
                                     class="w-20 h-20 rounded-lg object-cover border border-natgeo-cardBorder bg-black flex-shrink-0">
                                 <div class="flex-grow space-y-2">
-                                    <input type="text" value="${q.fullUrl.startsWith('data:') ? '[Загруженный файл]' : q.fullUrl}"
+                                    <input type="text" value="${q.fullUrl.startsWith('data:') || q.fullUrl.startsWith('blob:') ? '[Локальный файл]' : q.fullUrl}"
                                         onchange="window.updateQuestionImageUrl('${catKey}', ${idx}, 'fullUrl', this.value)"
                                         placeholder="Вставьте ссылку https://... или путь"
                                         class="w-full px-3 py-2 bg-natgeo-dark border border-natgeo-cardBorder rounded-lg text-xs text-white focus:outline-none focus:border-natgeo-yellow">
@@ -1479,7 +1441,7 @@ const app = initializeApp(firebaseConfig);
         }
 
         window.updateQuestionImageUrl = function(catKey, idx, field, newUrl) {
-            if (!newUrl || newUrl === '[Загруженный файл]') return;
+            if (!newUrl || newUrl === '[Локальный файл]') return;
             quizCategories[catKey].questions[idx][field] = newUrl.trim();
             const previewId = field === 'closeUrl' ? `preview-close-${catKey}-${idx}` : `preview-full-${catKey}-${idx}`;
             const imgEl = document.getElementById(previewId);
@@ -1509,9 +1471,9 @@ const app = initializeApp(firebaseConfig);
             });
         }
 
-        window.onload = () => {
+        document.addEventListener('DOMContentLoaded', () => {
             selectCategory('clothes');
-        };
+        });
     </script>
 </body>
 </html>
