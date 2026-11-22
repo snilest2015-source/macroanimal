@@ -571,8 +571,17 @@
             }
 
             try {
-                const firebaseConfig = JSON.parse(__firebase_config);
-                const app = initializeApp(firebaseConfig);
+                const firebaseConfig = {
+  apiKey: "AIzaSyD-fkczqYdDhSkH7tTz3V8S3FFzhkCHKVI",
+  authDomain: "animal-quiz-9708a.firebaseapp.com",
+  projectId: "animal-quiz-9708a",
+  storageBucket: "animal-quiz-9708a.firebasestorage.app",
+  messagingSenderId: "667501151229",
+  appId: "1:667501151229:web:2087808f66dec78f798f94",
+  measurementId: "G-3Z8QLZW8EP"
+};
+
+const app = initializeApp(firebaseConfig);
                 const auth = getAuth(app);
                 db = getFirestore(app);
                 resultsCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'quiz_results_ru');
@@ -646,6 +655,7 @@
         };
 
         initStorage();
+		
     </script>
 
     <!-- Данные квиза по 4 рубрикам и вся игровая логика -->
