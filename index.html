@@ -571,13 +571,35 @@
 
                 <div id="live-options" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-[11px] uppercase font-bold text-natgeo-textMuted mb-1">Рубрика</label>
-                        <select id="session-category" class="w-full px-3 py-3 bg-natgeo-dark border border-natgeo-cardBorder rounded-xl text-white text-sm font-semibold focus:outline-none focus:border-natgeo-yellow"></select>
+                        <label class="block text-[11px] uppercase font-bold text-natgeo-textMuted mb-1">Рубрики (можно выбрать несколько)</label>
+                        <div id="session-categories" class="space-y-2"></div>
                     </div>
                     <div>
                         <label class="block text-[11px] uppercase font-bold text-natgeo-textMuted mb-1">Секунд на ответ</label>
                         <input type="number" id="session-seconds" min="5" max="120" value="20" class="w-full px-3 py-3 bg-natgeo-dark border border-natgeo-cardBorder rounded-xl text-white text-sm font-semibold focus:outline-none focus:border-natgeo-yellow">
                     </div>
+                </div>
+
+                <div class="rounded-xl border border-natgeo-cardBorder bg-natgeo-dark p-4 space-y-3">
+                    <label class="flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" id="session-zoom" checked onchange="onZoomToggle()" class="w-4 h-4 accent-yellow-400">
+                        <span class="text-sm font-semibold text-white"><i class="fa-solid fa-magnifying-glass-minus text-natgeo-yellow mr-1"></i>Эффект «отъезжающей камеры» и баллы за скорость</span>
+                    </label>
+                    <div id="zoom-options" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-[11px] uppercase font-bold text-natgeo-textMuted mb-1">Скорость отъезда: секунд до полного кадра</label>
+                            <input type="number" id="session-zoom-sec" min="5" max="120" value="20" class="w-full px-3 py-3 bg-natgeo-card border border-natgeo-cardBorder rounded-xl text-white text-sm font-semibold focus:outline-none focus:border-natgeo-yellow">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] uppercase font-bold text-natgeo-textMuted mb-1">Начальное увеличение</label>
+                            <select id="session-zoom-start" class="w-full px-3 py-3 bg-natgeo-card border border-natgeo-cardBorder rounded-xl text-white text-sm font-semibold focus:outline-none focus:border-natgeo-yellow">
+                                <option value="6">Умеренное (×6)</option>
+                                <option value="12" selected>Сильное (×12)</option>
+                                <option value="20">Максимальное (×20)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-natgeo-textMuted leading-relaxed">Правильный ответ даёт до 1000 баллов сразу и постепенно меньше по мере того, как камера отъезжает (минимум 100). Если выключить — фото без анимации, по 1 баллу за верный ответ.</p>
                 </div>
 
                 <button type="submit" class="w-full py-3.5 bg-natgeo-yellow hover:bg-natgeo-yellowDark text-black font-extrabold text-sm rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer">
@@ -845,7 +867,7 @@
             }
         }
 
-        window.savePlayerResult = async function(playerName, score, totalQuestions, timeSeconds, categoryKey, categoryTitle, sessionId) {
+        window.savePlayerResult = async function(playerName, score, totalQuestions, timeSeconds, categoryKey, categoryTitle, sessionId, points, scoring) {
             const entry = {
                 playerName: playerName,
                 score: score,
@@ -854,6 +876,8 @@
                 categoryKey: categoryKey,
                 categoryTitle: categoryTitle,
                 sessionId: sessionId || null,
+                points: (points == null ? null : points),
+                scoring: scoring || 'count',
                 timestamp: Date.now(),
                 dateString: new Date().toLocaleString('ru-RU', {
                     day: '2-digit', month: '2-digit', year: 'numeric',
@@ -1374,6 +1398,7 @@
             score = 0;
             liveScoreEl.textContent = "0";
             quizStartTime = Date.now();
+            pointsTotal = 0;
             loadQuestion();
         }
 
@@ -1389,8 +1414,11 @@
             document.getElementById('active-category-badge').textContent = q.categoryTitle;
             document.getElementById('question-prompt').textContent = q.prompt;
 
-            animalImg.src = q.closeUrl;
-            zoomStatus.textContent = "МАКРО КРУПНЫЙ ПЛАН";
+            const zc = zoomCfg(currentSession);
+            animalImg.src = zc.on ? q.fullUrl : q.closeUrl;
+            qStartTime = Date.now();
+            if (zc.on) zoomStart(animalImg, zc, qStartTime); else zoomReset(animalImg);
+            zoomStatus.textContent = zoomCfg(currentSession).on ? "КАМЕРА ОТЪЕЗЖАЕТ…" : "МАКРО КРУПНЫЙ ПЛАН";
             zoomIcon.className = "fa-solid fa-magnifying-glass-plus animate-pulse";
 
             hintBtn.disabled = false;
@@ -1459,6 +1487,9 @@
                 liveScoreEl.textContent = score;
             }
 
+            if (isCorrect) pointsTotal += zoomPoints(Date.now() - qStartTime, zoomCfg(currentSession));
+            if (zoomCfg(currentSession).on) liveScoreEl.textContent = pointsTotal;
+            zoomReset(animalImg);
             animalImg.src = q.fullUrl;
             zoomStatus.textContent = "ПОЛНЫЙ КАДР";
             zoomIcon.className = "fa-solid fa-expand text-emerald-400";
@@ -1505,7 +1536,9 @@
             resultsScreen.classList.remove('hidden');
 
             document.getElementById('result-category-badge').textContent = categoryTitle;
-            document.getElementById('final-score').textContent = `${score} / ${activeQuestions.length}`;
+            const zcf = zoomCfg(currentSession);
+            document.getElementById('final-score').textContent = zcf.on ? `${pointsTotal} оч.` : `${score} / ${activeQuestions.length}`;
+            document.getElementById('final-score').nextElementSibling.textContent = zcf.on ? `Баллов · верных ответов: ${score} из ${activeQuestions.length}` : 'Правильных ответов';
             document.getElementById('final-player-name').textContent = playerName;
 
             const mins = Math.floor(timeSeconds / 60);
@@ -1513,7 +1546,7 @@
             document.getElementById('final-time').textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 
             if (window.savePlayerResult) {
-                window.savePlayerResult(playerName, score, activeQuestions.length, timeSeconds, selectedCategoryKey, categoryTitle, currentSessionId);
+                window.savePlayerResult(playerName, score, activeQuestions.length, timeSeconds, selectedCategoryKey, categoryTitle, currentSessionId, zoomCfg(currentSession).on ? pointsTotal : score * ZOOM_MAX_POINTS, zoomCfg(currentSession).on ? 'speed' : 'count');
             }
         }
 
@@ -1588,6 +1621,7 @@
             filtered = filtered.filter(sessionMatches);
 
             filtered.sort((a, b) => {
+                if (rowPoints(b) !== rowPoints(a)) return rowPoints(b) - rowPoints(a);
                 if (b.score !== a.score) return b.score - a.score;
                 return (a.timeSeconds || 9999) - (b.timeSeconds || 9999);
             });
@@ -1607,7 +1641,7 @@
             const winner = filtered[0];
             winnerName.textContent = winner.playerName;
             winnerCategoryLabel.textContent = `Рубрика: ${winner.categoryTitle || 'Квиз'}`;
-            winnerScore.textContent = `${winner.score} / ${winner.totalQuestions || 5}`;
+            winnerScore.textContent = scoreText(winner);
             const wMins = Math.floor((winner.timeSeconds || 0) / 60);
             const wSecs = (winner.timeSeconds || 0) % 60;
             winnerTime.textContent = `Время: ${wMins.toString().padStart(2, '0')}:${wSecs.toString().padStart(2, '0')}`;
@@ -1636,7 +1670,7 @@
                     <td class="py-3 px-4 text-xs text-gray-300">
                         <span class="px-2 py-0.5 rounded bg-natgeo-slate border border-natgeo-cardBorder">${row.categoryTitle || 'Квиз'}</span>
                     </td>
-                    <td class="py-3 px-4 text-center font-oswald text-natgeo-yellow text-base font-bold">${row.score} / ${row.totalQuestions || 5}</td>
+                    <td class="py-3 px-4 text-center font-oswald text-natgeo-yellow text-base font-bold">${scoreCell(row)}</td>
                     <td class="py-3 px-4 text-center text-xs text-natgeo-textMuted">${timeFormatted}</td>
                     <td class="py-3 px-4 text-right text-xs text-natgeo-textMuted">${row.dateString || '-'}</td>
                 `;
@@ -1669,15 +1703,16 @@
             }
 
             let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-            csvContent += "Место,Имя,Рубрика,Очки,Всего вопросов,Время (сек),Дата\n";
+            csvContent += "Место,Имя,Рубрика,Очки,Всего вопросов,Баллы,Время (сек),Дата\n";
 
             const sorted = [...allLeaderboardResults].sort((a, b) => {
+                if (rowPoints(b) !== rowPoints(a)) return rowPoints(b) - rowPoints(a);
                 if (b.score !== a.score) return b.score - a.score;
                 return (a.timeSeconds || 9999) - (b.timeSeconds || 9999);
             });
 
             sorted.forEach((r, idx) => {
-                csvContent += `${idx + 1},"${r.playerName}","${r.categoryTitle || ''}",${r.score},${r.totalQuestions || 5},${r.timeSeconds},"${r.dateString || ''}"\n`;
+                csvContent += `${idx + 1},"${r.playerName}","${r.categoryTitle || ''}",${r.score},${r.totalQuestions || 5},${rowPoints(r)},${r.timeSeconds},"${r.dateString || ''}"\n`;
             });
 
             const encodedUri = encodeURI(csvContent);
@@ -1840,6 +1875,65 @@
             } catch (e) { return fresh(); }
         })();
 
+        // ---------- Эффект «отъезжающая камера» и баллы за скорость ----------
+        const ZOOM_MAX_POINTS = 1000, ZOOM_MIN_POINTS = 100;
+        let qStartTime = 0, pointsTotal = 0;
+        let hostZoomKey = -1, hostQStart = 0, lpZoomKey = -1, lpMyMs = {};
+
+        function zoomCfg(session) {
+            if (session && session.zoom) return { on: true, sec: session.zoomSec || 20, start: session.zoomStart || 12 };
+            return { on: false };
+        }
+
+        function zoomPoints(ms, cfg) {
+            if (!cfg.on) return ZOOM_MAX_POINTS;
+            const p = Math.min(1, Math.max(0, ms / (cfg.sec * 1000)));
+            return Math.round(ZOOM_MAX_POINTS - (ZOOM_MAX_POINTS - ZOOM_MIN_POINTS) * p);
+        }
+
+        function zoomFrame(img, p, cfg) {
+            // экспоненциальный масштаб: отъезд выглядит равномерным
+            const s = Math.pow(cfg.start, 1 - p);
+            const blur = (1 - p) * (cfg.start >= 12 ? 10 : 6);
+            img.style.transform = 'scale(' + s.toFixed(3) + ')';
+            img.style.filter = blur > 0.2 ? 'blur(' + blur.toFixed(1) + 'px)' : 'none';
+        }
+
+        function zoomStop(img) {
+            if (img._zr) cancelAnimationFrame(img._zr);
+            img._zr = null;
+        }
+
+        function zoomReset(img) {
+            if (!img) return;
+            zoomStop(img);
+            img.style.transition = '';
+            img.style.transform = '';
+            img.style.filter = '';
+        }
+
+        function zoomStart(img, cfg, startMs) {
+            zoomStop(img);
+            if (!cfg.on) { zoomReset(img); return; }
+            img.style.transition = 'none';
+            const loop = () => {
+                const p = Math.min(1, (Date.now() - startMs) / (cfg.sec * 1000));
+                zoomFrame(img, p, cfg);
+                img._zr = p < 1 ? requestAnimationFrame(loop) : null;
+            };
+            loop();
+        }
+
+        function onZoomToggle() {
+            document.getElementById('zoom-options').classList.toggle('hidden', !document.getElementById('session-zoom').checked);
+        }
+
+        const rowPoints = r => (r.points != null ? r.points : (r.score || 0) * ZOOM_MAX_POINTS);
+        const scoreText = r => r.scoring === 'speed' ? rowPoints(r) + ' оч.' : r.score + ' / ' + (r.totalQuestions || 5);
+        const scoreCell = r => r.scoring === 'speed'
+            ? rowPoints(r) + '<div class="text-[10px] font-sans font-normal text-natgeo-textMuted">' + r.score + '/' + (r.totalQuestions || 5) + ' верно</div>'
+            : r.score + ' / ' + (r.totalQuestions || 5);
+
         function sessionMatches(r) {
             if (currentSessionFilter === 'all') return true;
             if (currentSessionFilter === 'open') return !r.sessionId;
@@ -1925,17 +2019,7 @@
         function openSessionsScreen() {
             hideAllScreens();
             document.getElementById('sessions-screen').classList.remove('hidden');
-            const sel = document.getElementById('session-category');
-            if (!sel.options.length) {
-                ['clothes', 'eyes', 'paws', 'teeth'].forEach(k => {
-                    const o = document.createElement('option');
-                    o.value = k; o.textContent = quizCategories[k].title;
-                    sel.appendChild(o);
-                });
-                const mix = document.createElement('option');
-                mix.value = 'mix'; mix.textContent = 'Все рубрики (Микс, 10 вопросов)';
-                sel.appendChild(mix);
-            }
+            renderCategoryPicker();
             const warn = document.getElementById('sessions-cloud-warning');
             warn.classList.toggle('hidden', !(window.cloudAvailable && !window.cloudAvailable()));
             renderSessionsList();
@@ -1946,16 +2030,45 @@
             document.getElementById('live-options').classList.toggle('hidden', mode !== 'live');
         }
 
-        function buildLiveOrder(catKey) {
+        function renderCategoryPicker() {
+            const box = document.getElementById('session-categories');
+            if (box.dataset.ready) return;
+            box.dataset.ready = '1';
+            const chip = 'flex items-center gap-2 px-3 py-2 rounded-lg bg-natgeo-dark border border-natgeo-cardBorder cursor-pointer text-sm text-white font-semibold';
+            const link = 'px-2.5 py-1 rounded-md bg-natgeo-slate hover:bg-natgeo-cardBorder border border-natgeo-cardBorder text-[11px] text-white font-bold cursor-pointer';
+            box.innerHTML = ['clothes', 'eyes', 'paws', 'teeth'].map(k =>
+                `<label class="${chip}"><input type="checkbox" class="cat-check accent-yellow-400" value="${k}" ${k === 'clothes' ? 'checked' : ''} onchange="updateCatCount()"><span>${quizCategories[k].title}</span></label>`
+            ).join('') +
+            `<div class="flex flex-wrap items-center gap-2 pt-1">
+                <button type="button" class="${link}" onclick="setAllCategories(true)">Выбрать все 4</button>
+                <button type="button" class="${link}" onclick="setAllCategories(false)">Сбросить</button>
+                <span id="cat-count" class="text-[11px] text-natgeo-textMuted"></span>
+            </div>
+            <label class="flex items-center gap-2 text-xs text-white cursor-pointer"><input type="checkbox" id="session-shuffle" checked class="accent-yellow-400"> Перемешать вопросы разных рубрик</label>`;
+            updateCatCount();
+        }
+
+        function setAllCategories(on) {
+            document.querySelectorAll('.cat-check').forEach(c => { c.checked = on; });
+            updateCatCount();
+        }
+
+        function updateCatCount() {
+            const keys = [...document.querySelectorAll('.cat-check:checked')].map(c => c.value);
+            const n = keys.reduce((s, k) => s + quizCategories[k].questions.length, 0);
+            const el = document.getElementById('cat-count');
+            if (el) el.textContent = `Вопросов в игре: ${n}`;
+        }
+
+        function buildLiveOrder(keys, shuffle) {
+            if (!Array.isArray(keys)) keys = [keys];
             const refs = [];
-            if (catKey === 'mix') {
-                ['clothes', 'eyes', 'paws', 'teeth'].forEach((k, idx) => {
-                    const n = idx < 2 ? 3 : 2;
-                    for (let j = 0; j < n; j++) refs.push({ c: k, i: j });
-                });
-                refs.sort(() => Math.random() - 0.5);
-            } else {
-                quizCategories[catKey].questions.forEach((_, j) => refs.push({ c: catKey, i: j }));
+            keys.forEach(k => quizCategories[k].questions.forEach((_, j) => refs.push({ c: k, i: j })));
+            if (shuffle && keys.length > 1) {
+                for (let i = refs.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [refs[i], refs[j]] = [refs[j], refs[i]];
+                }
             }
             return refs;
         }
@@ -1971,9 +2084,21 @@
             const mode = document.querySelector('input[name="session-mode"]:checked').value;
             const seconds = Math.min(120, Math.max(5, parseInt(document.getElementById('session-seconds').value, 10) || 20));
             const data = { name: name, mode: mode, seconds: seconds };
+            data.zoom = document.getElementById('session-zoom').checked;
+            data.zoomSec = Math.min(120, Math.max(5, parseInt(document.getElementById('session-zoom-sec').value, 10) || 20));
+            data.zoomStart = parseInt(document.getElementById('session-zoom-start').value, 10) || 12;
             if (mode === 'live') {
-                data.categoryKey = document.getElementById('session-category').value;
-                data.order = buildLiveOrder(data.categoryKey);
+                const keys = [...document.querySelectorAll('.cat-check:checked')].map(c => c.value);
+                if (!keys.length) {
+                    showCustomModal({ title: 'Выберите рубрику', message: 'Отметьте хотя бы одну рубрику для управляемой игры.', icon: 'fa-circle-info' });
+                    return;
+                }
+                const shuffle = document.getElementById('session-shuffle').checked;
+                data.categoryKeys = keys;
+                data.categoryKey = keys.length === 1 ? keys[0] : 'mix';
+                data.categoryLabel = keys.length === 1 ? quizCategories[keys[0]].title
+                    : (keys.length === 4 ? 'Все рубрики (Микс)' : keys.map(k => quizCategories[k].shortTitle).join(' + '));
+                data.order = buildLiveOrder(keys, shuffle);
             }
             try {
                 const code = await window.createSession(data);
@@ -2009,7 +2134,7 @@
                             <h4 class="font-oswald text-lg text-white uppercase tracking-wide">${escapeHtml(s.name)}</h4>
                             <span class="text-[10px] px-2 py-0.5 rounded font-bold uppercase ${live ? 'bg-natgeo-yellow text-black' : 'bg-natgeo-slate text-natgeo-textMuted border border-natgeo-cardBorder'}">${live ? 'Управляемая' : 'Свободная'}</span>
                         </div>
-                        <p class="text-xs text-natgeo-textMuted mt-1">Код <span class="text-natgeo-yellow font-bold tracking-widest">${s.code}</span> · ${date} · результатов: ${cnt}${live ? ' · ' + (s.seconds || 20) + ' сек на вопрос' : ''}</p>
+                        <p class="text-xs text-natgeo-textMuted mt-1">Код <span class="text-natgeo-yellow font-bold tracking-widest">${s.code}</span> · ${date} · результатов: ${cnt}${live ? ' · ' + (s.seconds || 20) + ' сек на вопрос' : ''}${s.categoryLabel ? ' · ' + escapeHtml(s.categoryLabel) : ''}${s.zoom ? ' · зум ' + (s.zoomSec || 20) + ' с' : ''}</p>
                     </div>
                     <div class="flex flex-wrap gap-2">
                         ${live ? `<button class="px-3 py-2 bg-natgeo-yellow hover:bg-natgeo-yellowDark text-black text-xs rounded-lg font-extrabold cursor-pointer" onclick="openLiveHost('${s.code}')"><i class="fa-solid fa-play mr-1"></i>Вести игру</button>` : ''}
@@ -2071,7 +2196,7 @@
             if (!list.length) { box.classList.add('hidden'); return; }
             box.classList.remove('hidden');
             box.innerHTML = '<div class="text-xs uppercase font-bold text-natgeo-yellow tracking-wider font-oswald">Лучшие в этой игре</div>' +
-                list.map((r, i) => `<div class="flex items-center justify-between text-sm"><span class="text-white"><span class="text-natgeo-textMuted mr-2">${i + 1}.</span>${escapeHtml(r.playerName)}</span><span class="font-oswald text-natgeo-yellow">${r.score} / ${r.totalQuestions || 5}</span></div>`).join('');
+                list.map((r, i) => `<div class="flex items-center justify-between text-sm"><span class="text-white"><span class="text-natgeo-textMuted mr-2">${i + 1}.</span>${escapeHtml(r.playerName)}</span><span class="font-oswald text-natgeo-yellow">${scoreText(r)}</span></div>`).join('');
         }
 
         // ============================================================================
@@ -2084,7 +2209,8 @@
         function stopLiveHost() {
             if (hostTimerInt) { clearInterval(hostTimerInt); hostTimerInt = null; }
             if (hostLiveUnsub) { try { hostLiveUnsub(); } catch (e) {} hostLiveUnsub = null; }
-            hostSession = null; hostQrCode = null;
+            hostSession = null; hostQrCode = null; hostZoomKey = -1;
+            zoomReset(document.getElementById('lh-img'));
             hostLivePlayers = []; hostLiveAnswers = [];
         }
 
@@ -2126,6 +2252,7 @@
 
         function hostGoToQuestion(idx) {
             const sec = hostSession.seconds || 20;
+            hostQStart = Date.now();
             hostEndsAt = Date.now() + sec * 1000;
             setHostState({ phase: 'question', qIndex: idx, timerSec: sec, v: (hostState.v || 0) + 1 });
             renderLiveHost();
@@ -2174,18 +2301,19 @@
 
         function computeStandings() {
             const by = {};
-            hostLivePlayers.forEach(p => { by[p.playerId] = { playerId: p.playerId, name: p.name, score: 0, ms: 0 }; });
+            const cfg = zoomCfg(hostSession);
+            hostLivePlayers.forEach(p => { by[p.playerId] = { playerId: p.playerId, name: p.name, score: 0, points: 0, ms: 0 }; });
             hostLiveAnswers.forEach(a => {
-                const p = by[a.playerId] || (by[a.playerId] = { playerId: a.playerId, name: a.name || 'Игрок', score: 0, ms: 0 });
+                const p = by[a.playerId] || (by[a.playerId] = { playerId: a.playerId, name: a.name || 'Игрок', score: 0, points: 0, ms: 0 });
                 const q = hostQuestions[a.qIdx];
-                if (q && a.choice === q.correct) { p.score++; p.ms += a.ms || 0; }
+                if (q && a.choice === q.correct) { p.score++; p.points += zoomPoints(a.ms || 0, cfg); p.ms += a.ms || 0; }
             });
-            return Object.values(by).sort((a, b) => (b.score - a.score) || (a.ms - b.ms));
+            return Object.values(by).sort((a, b) => (b.points - a.points) || (b.score - a.score) || (a.ms - b.ms));
         }
 
         async function hostFinish() {
             const standings = computeStandings();
-            const catTitle = hostSession.categoryKey === 'mix'
+            const catTitle = hostSession.categoryLabel ? hostSession.categoryLabel : hostSession.categoryKey === 'mix'
                 ? 'Все рубрики (Микс)'
                 : ((quizCategories[hostSession.categoryKey] || {}).title || 'Квиз');
             const dateString = new Date().toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -2193,6 +2321,8 @@
                 playerId: p.playerId,
                 playerName: p.name,
                 score: p.score,
+                points: p.points,
+                scoring: zoomCfg(hostSession).on ? 'speed' : 'count',
                 totalQuestions: hostQuestions.length,
                 timeSeconds: Math.max(1, Math.round(p.ms / 1000)),
                 categoryKey: hostSession.categoryKey,
@@ -2247,7 +2377,15 @@
             setT('lh-zoom', phase === 'reveal' ? 'ПОЛНЫЙ КАДР' : 'МАКРО КРУПНЫЙ ПЛАН');
 
             const img = document.getElementById('lh-img');
-            const src = phase === 'reveal' ? q.fullUrl : q.closeUrl;
+            const zc = zoomCfg(hostSession);
+            const src = (phase === 'reveal' || zc.on) ? q.fullUrl : q.closeUrl;
+            if (zc.on) {
+                if (phase === 'reveal') { zoomReset(img); hostZoomKey = st.qIndex; }
+                else if (hostZoomKey !== st.qIndex) {
+                    hostZoomKey = st.qIndex;
+                    if (phase === 'question') zoomStart(img, zc, hostQStart || Date.now()); else zoomReset(img);
+                }
+            }
             if (img.dataset.src !== src) { img.dataset.src = src; img.src = src; }
 
             const ans = hostLiveAnswers.filter(a => a.qIdx === st.qIndex);
@@ -2303,7 +2441,7 @@
                 ? standings.map((p, i) => `<tr class="${i === 0 ? 'bg-natgeo-yellow/10 font-bold' : ''}">
                     <td class="py-3 px-4 text-center font-oswald text-base">${medal(i)}</td>
                     <td class="py-3 px-4 font-semibold">${escapeHtml(p.name)}</td>
-                    <td class="py-3 px-4 text-center font-oswald text-natgeo-yellow text-base font-bold">${p.score} / ${hostQuestions.length}</td>
+                    <td class="py-3 px-4 text-center font-oswald text-natgeo-yellow text-base font-bold">${zoomCfg(hostSession).on ? p.points + '<div class="text-[10px] font-sans font-normal text-natgeo-textMuted">' + p.score + '/' + hostQuestions.length + ' верно</div>' : p.score + ' / ' + hostQuestions.length}</td>
                     <td class="py-3 px-4 text-center text-xs text-natgeo-textMuted">${fmt(p.ms)}</td></tr>`).join('')
                 : '<tr><td colspan="4" class="py-8 text-center text-xs text-natgeo-textMuted">Участников не было.</td></tr>';
         }
@@ -2338,6 +2476,17 @@
 
         function showLp(id) {
             ['lp-lobby', 'lp-question', 'lp-final'].forEach(x => document.getElementById(x).classList.toggle('hidden', x !== id));
+        }
+
+        function lpLocalPoints() {
+            const cfg = zoomCfg(currentSession);
+            let n = 0;
+            Object.keys(lpMyAnswers).forEach(k => {
+                const idx = Number(k), q = lpQuestions[idx];
+                if (!q || lpMyAnswers[k] !== q.correct) return;
+                if (idx < lpQIdx || (idx === lpQIdx && lpPhase === 'reveal')) n += zoomPoints(lpMyMs[k] || 0, cfg);
+            });
+            return n;
         }
 
         function lpLocalScore(all) {
@@ -2404,7 +2553,15 @@
             showLp('lp-question');
             setT('lp-qnum', `Вопрос ${lpQIdx + 1} из ${lpQuestions.length}`);
             const img = document.getElementById('lp-img');
-            const src = phase === 'reveal' ? q.fullUrl : q.closeUrl;
+            const zc = zoomCfg(currentSession);
+            const src = (phase === 'reveal' || zc.on) ? q.fullUrl : q.closeUrl;
+            if (zc.on) {
+                if (phase === 'reveal') { zoomReset(img); lpZoomKey = lpQIdx; }
+                else if (lpZoomKey !== lpQIdx) {
+                    lpZoomKey = lpQIdx;
+                    if (phase === 'question') zoomStart(img, zc, lpQStart); else zoomReset(img);
+                }
+            }
             if (img.dataset.src !== src) { img.dataset.src = src; img.src = src; }
 
             const canAnswer = phase === 'question' && lpAnswered === null;
@@ -2433,7 +2590,7 @@
             if (phase === 'reveal') { fact.textContent = 'Это ' + q.name + '. ' + q.fact; fact.classList.remove('hidden'); }
             else fact.classList.add('hidden');
 
-            setT('lp-score', lpLocalScore(false));
+            setT('lp-score', zoomCfg(currentSession).on ? lpLocalPoints() : lpLocalScore(false));
         }
 
         function lpChoose(i) {
@@ -2441,6 +2598,7 @@
             lpAnswered = i;
             lpMyAnswers[lpQIdx] = i;
             const ms = Date.now() - lpQStart;
+            lpMyMs[lpQIdx] = ms;
             window.submitAnswer(currentSession.code, lpQIdx, playerId, lpPlayerName, i, ms).catch(e => console.warn('answer:', e));
             paintLp(lpQuestions[lpQIdx], 'question');
         }
@@ -2451,7 +2609,7 @@
             const idx = mine.findIndex(r => r.playerId === playerId);
             let score = lpLocalScore(true), place = '';
             if (idx >= 0) { score = mine[idx].score; place = `Ваше место: ${idx + 1} из ${mine.length}`; }
-            setT('lp-final-score', `${score} / ${lpQuestions.length}`);
+            setT('lp-final-score', (zoomCfg(currentSession).on && idx >= 0) ? `${rowPoints(mine[idx])} оч.` : `${score} / ${lpQuestions.length}`);
             setT('lp-final-place', place);
             setT('lp-score', score);
         }
