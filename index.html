@@ -328,7 +328,7 @@
                 <!-- Область фотографии -->
                 <div class="relative w-full h-64 sm:h-96 rounded-xl overflow-hidden bg-black photo-frame mb-6 flex items-center justify-center">
                     <img id="animal-img" src="" alt="Макросъемка животного" 
-                        onerror="handleImageFallback(this)"
+                        onerror="window.handleImageFallback(this)"
                         class="w-full h-full object-cover transition-all duration-700 ease-out">
                     
                     <!-- Бейдж режима съемки -->
@@ -953,10 +953,10 @@ const app = initializeApp(firebaseConfig);
         const factText = document.getElementById('fact-text');
 
         // Безопасная заглушка, если пользователь ввел некорректный URL картинки
-        function handleImageFallback(imgEl) {
+        window.handleImageFallback = function(imgEl) {
             imgEl.onerror = null;
             imgEl.src = "https://placehold.co/800x500/16161a/FFCC00?text=%D0%92%D1%81%D1%82%D0%B0%D0%B2%D1%8C%D1%82%D0%B5+%D1%81%D0%B2%D0%BE%D0%B5+%D1%84%D0%BE%D1%82%D0%BE+%D0%B2+%D1%80%D0%B5%D0%B4%D0%B0%D0%BA%D1%82%D0%BE%D1%80%D0%B5";
-        }
+        };
 
         // Кастомное модальное окно вместо alert() и confirm()
         function showCustomModal({ title, message, icon = "fa-circle-info", confirmText = "ОК", cancelText = null, onConfirm = null }) {
@@ -1437,17 +1437,17 @@ const app = initializeApp(firebaseConfig);
                         <div class="space-y-2">
                             <label class="block text-xs font-bold text-natgeo-yellow uppercase">1. Макро крупный план (до ответа)</label>
                             <div class="flex items-center gap-3">
-                                <img id="preview-close-${catKey}-${idx}" src="${q.closeUrl}" onerror="handleImageFallback(this)"
+                                <img id="preview-close-${catKey}-${idx}" src="${q.closeUrl}" onerror="window.handleImageFallback(this)"
                                     class="w-20 h-20 rounded-lg object-cover border border-natgeo-cardBorder bg-black flex-shrink-0">
                                 <div class="flex-grow space-y-2">
                                     <input type="text" value="${q.closeUrl.startsWith('data:') ? '[Загруженный файл]' : q.closeUrl}"
-                                        onchange="updateQuestionImageUrl('${catKey}', ${idx}, 'closeUrl', this.value)"
+                                        onchange="window.updateQuestionImageUrl('${catKey}', ${idx}, 'closeUrl', this.value)"
                                         placeholder="Вставьте ссылку https://... или путь"
                                         class="w-full px-3 py-2 bg-natgeo-dark border border-natgeo-cardBorder rounded-lg text-xs text-white focus:outline-none focus:border-natgeo-yellow">
                                     <label class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-natgeo-slate hover:bg-natgeo-cardBorder text-xs text-gray-200 font-semibold cursor-pointer">
                                         <i class="fa-solid fa-upload text-natgeo-yellow"></i>
                                         <span>Выбрать файл с устройства</span>
-                                        <input type="file" accept="image/*" class="hidden" onchange="handleLocalFileUpload(event, '${catKey}', ${idx}, 'closeUrl')">
+                                        <input type="file" accept="image/*" class="hidden" onchange="window.handleLocalFileUpload(event, '${catKey}', ${idx}, 'closeUrl')">
                                     </label>
                                 </div>
                             </div>
@@ -1457,17 +1457,17 @@ const app = initializeApp(firebaseConfig);
                         <div class="space-y-2">
                             <label class="block text-xs font-bold text-emerald-400 uppercase">2. Полный кадр (после ответа)</label>
                             <div class="flex items-center gap-3">
-                                <img id="preview-full-${catKey}-${idx}" src="${q.fullUrl}" onerror="handleImageFallback(this)"
+                                <img id="preview-full-${catKey}-${idx}" src="${q.fullUrl}" onerror="window.handleImageFallback(this)"
                                     class="w-20 h-20 rounded-lg object-cover border border-natgeo-cardBorder bg-black flex-shrink-0">
                                 <div class="flex-grow space-y-2">
                                     <input type="text" value="${q.fullUrl.startsWith('data:') ? '[Загруженный файл]' : q.fullUrl}"
-                                        onchange="updateQuestionImageUrl('${catKey}', ${idx}, 'fullUrl', this.value)"
+                                        onchange="window.updateQuestionImageUrl('${catKey}', ${idx}, 'fullUrl', this.value)"
                                         placeholder="Вставьте ссылку https://... или путь"
                                         class="w-full px-3 py-2 bg-natgeo-dark border border-natgeo-cardBorder rounded-lg text-xs text-white focus:outline-none focus:border-natgeo-yellow">
                                     <label class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-natgeo-slate hover:bg-natgeo-cardBorder text-xs text-gray-200 font-semibold cursor-pointer">
                                         <i class="fa-solid fa-upload text-emerald-400"></i>
                                         <span>Выбрать файл с устройства</span>
-                                        <input type="file" accept="image/*" class="hidden" onchange="handleLocalFileUpload(event, '${catKey}', ${idx}, 'fullUrl')">
+                                        <input type="file" accept="image/*" class="hidden" onchange="window.handleLocalFileUpload(event, '${catKey}', ${idx}, 'fullUrl')">
                                     </label>
                                 </div>
                             </div>
@@ -1478,15 +1478,15 @@ const app = initializeApp(firebaseConfig);
             });
         }
 
-        function updateQuestionImageUrl(catKey, idx, field, newUrl) {
+        window.updateQuestionImageUrl = function(catKey, idx, field, newUrl) {
             if (!newUrl || newUrl === '[Загруженный файл]') return;
             quizCategories[catKey].questions[idx][field] = newUrl.trim();
             const previewId = field === 'closeUrl' ? `preview-close-${catKey}-${idx}` : `preview-full-${catKey}-${idx}`;
             const imgEl = document.getElementById(previewId);
             if (imgEl) imgEl.src = newUrl.trim();
-        }
+        };
 
-        function handleLocalFileUpload(event, catKey, idx, field) {
+        window.handleLocalFileUpload = function(event, catKey, idx, field) {
             const file = event.target.files[0];
             if (!file) return;
 
@@ -1495,7 +1495,7 @@ const app = initializeApp(firebaseConfig);
             const previewId = field === 'closeUrl' ? `preview-close-${catKey}-${idx}` : `preview-full-${catKey}-${idx}`;
             const imgEl = document.getElementById(previewId);
             if (imgEl) imgEl.src = objectUrl;
-        }
+        };
 
         function resetCustomImages() {
             Object.keys(defaultQuizCategories).forEach(key => {
