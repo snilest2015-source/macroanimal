@@ -105,7 +105,11 @@
             </button>
             
             <!-- Кнопки управления в шапке -->
-            <div class="flex items-center gap-2 sm:gap-3">
+            <div id="header-actions" class="flex items-center gap-2 sm:gap-3">
+                <button onclick="openSessionsScreen()" class="px-3 py-1.5 rounded-lg bg-natgeo-yellow hover:bg-natgeo-yellowDark text-black text-xs font-extrabold transition-all flex items-center gap-2 cursor-pointer" title="Создать игру с уникальным QR-кодом">
+                    <i class="fa-solid fa-qrcode text-sm"></i>
+                    <span>Игры и QR</span>
+                </button>
                 <button onclick="togglePhotoEditor()" class="px-3 py-1.5 rounded-lg bg-natgeo-card hover:bg-natgeo-slate border border-natgeo-cardBorder text-gray-200 hover:text-natgeo-yellow text-xs font-bold transition-all flex items-center gap-2 cursor-pointer" title="Заменить фотографии или добавить свои">
                     <i class="fa-solid fa-images text-natgeo-yellow text-sm"></i>
                     <span class="hidden md:inline">Мои фото / Редактор</span>
@@ -132,11 +136,28 @@
         </div>
     </div>
 
+    <!-- Модальное окно QR-кода игры -->
+    <div id="qr-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="bg-natgeo-card border border-natgeo-yellow/50 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-center">
+            <h3 id="qr-modal-title" class="text-lg font-bold text-white font-oswald uppercase tracking-wide"></h3>
+            <div class="text-xs text-natgeo-textMuted">Код игры: <b id="qr-modal-code" class="text-natgeo-yellow tracking-widest text-base"></b></div>
+            <div class="flex justify-center"><div id="qr-modal-container" class="p-3 bg-white rounded-xl"></div></div>
+            <div class="flex gap-2">
+                <input id="qr-modal-link" readonly class="flex-1 min-w-0 px-3 py-2 bg-natgeo-dark border border-natgeo-cardBorder rounded-lg text-[11px] text-white">
+                <button onclick="copyQrLink()" class="px-3 py-2 bg-natgeo-slate hover:bg-natgeo-cardBorder border border-natgeo-cardBorder text-xs text-white rounded-lg font-bold cursor-pointer">Копировать</button>
+            </div>
+            <button onclick="closeQrModal()" class="w-full py-2.5 bg-natgeo-yellow hover:bg-natgeo-yellowDark text-black text-xs font-extrabold rounded-lg cursor-pointer">Закрыть</button>
+        </div>
+    </div>
+
     <!-- Основной контейнер -->
     <main class="max-w-5xl mx-auto w-full px-4 py-6 sm:py-8 flex-grow flex flex-col justify-center">
 
         <!-- 1. СТАРТОВЫЙ ЭКРАН: ВЫБОР РУБРИКИ И РЕГИСТРАЦИЯ -->
         <section id="start-screen" class="space-y-8 max-w-4xl mx-auto py-2 sm:py-4 w-full">
+            <div id="session-banner" class="hidden max-w-xl mx-auto px-4 py-3 rounded-xl bg-natgeo-yellow/10 border border-natgeo-yellow/40 text-center text-sm text-white">
+                <i class="fa-solid fa-users text-natgeo-yellow mr-2"></i>Игра: <b id="session-banner-name" class="text-natgeo-yellow"></b>
+            </div>
             <div class="text-center space-y-4 max-w-2xl mx-auto">
                 <div class="inline-block p-4 rounded-full bg-natgeo-card border border-natgeo-cardBorder gold-glow">
                     <i class="fa-solid fa-camera-retro text-3xl sm:text-4xl text-natgeo-yellow"></i>
@@ -402,11 +423,13 @@
                 </div>
             </div>
 
+            <div id="result-top-list" class="hidden bg-natgeo-card border border-natgeo-cardBorder rounded-2xl p-4 space-y-2"></div>
+
             <div class="flex flex-col sm:flex-row gap-3">
                 <button onclick="restartQuiz()" class="flex-1 py-3.5 bg-natgeo-yellow hover:bg-natgeo-yellowDark text-black font-bold text-sm rounded-xl transition-all cursor-pointer">
                     Выбрать другую рубрику / Сыграть снова
                 </button>
-                <button onclick="toggleHostMode()" class="flex-1 py-3.5 bg-natgeo-slate hover:bg-natgeo-cardBorder text-white font-bold text-sm rounded-xl border border-natgeo-cardBorder transition-all flex items-center justify-center gap-2 cursor-pointer">
+                <button id="results-lb-btn" onclick="toggleHostMode()" class="flex-1 py-3.5 bg-natgeo-slate hover:bg-natgeo-cardBorder text-white font-bold text-sm rounded-xl border border-natgeo-cardBorder transition-all flex items-center justify-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-list-ol text-natgeo-yellow"></i>
                     <span>Посмотреть общий рейтинг</span>
                 </button>
@@ -475,6 +498,9 @@
                         Все участники (<span id="total-players-count">0</span>)
                     </h3>
 
+                    <select id="lb-session-select" onchange="setSessionFilter(this.value)" class="px-2.5 py-1 rounded-md text-xs font-bold bg-natgeo-dark border border-natgeo-cardBorder text-white focus:outline-none focus:border-natgeo-yellow cursor-pointer max-w-[16rem]">
+                        <option value="all">Все игры</option>
+                    </select>
                     <div class="flex flex-wrap gap-1.5" id="leaderboard-filters">
                         <button onclick="setLeaderboardFilter('all')" data-filter="all" class="lb-filter-btn px-2.5 py-1 rounded-md text-xs font-bold bg-natgeo-yellow text-black transition-all cursor-pointer">Все</button>
                         <button onclick="setLeaderboardFilter('clothes')" data-filter="clothes" class="lb-filter-btn px-2.5 py-1 rounded-md text-xs font-bold bg-natgeo-slate text-natgeo-textMuted hover:text-white transition-all cursor-pointer">Одежда</button>
@@ -501,6 +527,207 @@
                             <!-- Динамические строки -->
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. ИГРЫ И QR-КОДЫ (ведущий) -->
+        <section id="sessions-screen" class="hidden space-y-6 w-full max-w-4xl mx-auto">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-natgeo-cardBorder pb-4">
+                <div>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-white font-oswald uppercase flex items-center gap-3">
+                        <i class="fa-solid fa-qrcode text-natgeo-yellow"></i><span>Мои игры и QR-коды</span>
+                    </h2>
+                    <p class="text-xs text-natgeo-textMuted mt-1">Для каждой аудитории — свой код и свой рейтинг. Игры сохраняются, к ним можно вернуться.</p>
+                </div>
+                <button onclick="closeHostMode()" class="px-4 py-2 bg-natgeo-slate hover:bg-natgeo-cardBorder border border-natgeo-cardBorder text-white text-xs font-bold rounded-lg transition-all cursor-pointer">На главную</button>
+            </div>
+
+            <div id="sessions-cloud-warning" class="hidden px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs leading-relaxed">
+                Нет связи с облаком (Firebase). Игры с кодами работают только онлайн — проверьте интернет и правила базы данных.
+            </div>
+
+            <form onsubmit="event.preventDefault(); createNewSession();" class="bg-natgeo-card border border-natgeo-cardBorder rounded-2xl p-5 sm:p-6 space-y-4">
+                <h3 class="text-sm font-bold text-natgeo-yellow uppercase tracking-wider font-oswald">Новая игра</h3>
+                <input type="text" id="session-name" required maxlength="60" placeholder="Название аудитории, например: 7Б класс, школа №5"
+                    class="w-full px-4 py-3 bg-natgeo-dark border border-natgeo-cardBorder rounded-xl text-white placeholder-natgeo-textMuted focus:outline-none focus:border-natgeo-yellow text-sm font-semibold">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <label class="cursor-pointer">
+                        <input type="radio" name="session-mode" value="live" checked class="peer hidden" onchange="onSessionModeChange()">
+                        <div class="h-full rounded-xl border border-natgeo-cardBorder bg-natgeo-dark p-4 peer-checked:border-natgeo-yellow peer-checked:bg-natgeo-yellow/10 transition-all">
+                            <div class="font-oswald uppercase text-white tracking-wide flex items-center gap-2"><i class="fa-solid fa-tower-broadcast text-natgeo-yellow"></i> Управляемая</div>
+                            <p class="text-xs text-natgeo-textMuted mt-1 leading-relaxed">Вы ведёте игру в аудитории: сами показываете вопросы, у участников ограниченное время на ответ (можно продлить).</p>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer">
+                        <input type="radio" name="session-mode" value="self" class="peer hidden" onchange="onSessionModeChange()">
+                        <div class="h-full rounded-xl border border-natgeo-cardBorder bg-natgeo-dark p-4 peer-checked:border-natgeo-yellow peer-checked:bg-natgeo-yellow/10 transition-all">
+                            <div class="font-oswald uppercase text-white tracking-wide flex items-center gap-2"><i class="fa-solid fa-person-walking text-natgeo-yellow"></i> Свободная</div>
+                            <p class="text-xs text-natgeo-textMuted mt-1 leading-relaxed">Каждый проходит сам в своём темпе и выбирает рубрику. Результаты идут в рейтинг этой аудитории.</p>
+                        </div>
+                    </label>
+                </div>
+
+                <div id="live-options" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] uppercase font-bold text-natgeo-textMuted mb-1">Рубрика</label>
+                        <select id="session-category" class="w-full px-3 py-3 bg-natgeo-dark border border-natgeo-cardBorder rounded-xl text-white text-sm font-semibold focus:outline-none focus:border-natgeo-yellow"></select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] uppercase font-bold text-natgeo-textMuted mb-1">Секунд на ответ</label>
+                        <input type="number" id="session-seconds" min="5" max="120" value="20" class="w-full px-3 py-3 bg-natgeo-dark border border-natgeo-cardBorder rounded-xl text-white text-sm font-semibold focus:outline-none focus:border-natgeo-yellow">
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-3.5 bg-natgeo-yellow hover:bg-natgeo-yellowDark text-black font-extrabold text-sm rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-plus"></i><span>СОЗДАТЬ ИГРУ И ПОЛУЧИТЬ QR-КОД</span>
+                </button>
+            </form>
+
+            <div>
+                <h3 class="text-sm font-bold text-white uppercase tracking-wider font-oswald mb-3">Сохранённые игры</h3>
+                <div id="sessions-list" class="space-y-3"></div>
+            </div>
+        </section>
+
+        <!-- 7. ВХОД В УПРАВЛЯЕМУЮ ИГРУ (участник) -->
+        <section id="join-screen" class="hidden max-w-md mx-auto w-full py-6 space-y-6 text-center">
+            <div class="inline-block p-4 rounded-full bg-natgeo-card border border-natgeo-cardBorder gold-glow">
+                <i class="fa-solid fa-tower-broadcast text-4xl text-natgeo-yellow"></i>
+            </div>
+            <div>
+                <p class="text-xs uppercase tracking-widest text-natgeo-textMuted">Вы подключаетесь к игре</p>
+                <h2 id="join-session-name" class="text-3xl font-bold text-white font-oswald uppercase mt-1"></h2>
+            </div>
+            <form onsubmit="event.preventDefault(); joinLiveGame();" class="bg-natgeo-card border border-natgeo-cardBorder rounded-2xl p-5 space-y-4 text-left">
+                <label for="join-name" class="block text-xs uppercase font-bold text-natgeo-yellow tracking-wider">Ваше имя / никнейм</label>
+                <input type="text" id="join-name" required maxlength="30" placeholder="Например: Александр"
+                    class="w-full px-4 py-3.5 bg-natgeo-dark border border-natgeo-cardBorder rounded-xl text-white placeholder-natgeo-textMuted focus:outline-none focus:border-natgeo-yellow text-sm font-semibold">
+                <button type="submit" class="w-full py-4 bg-natgeo-yellow hover:bg-natgeo-yellowDark text-black font-extrabold text-base rounded-xl transition-all cursor-pointer">ВОЙТИ В ИГРУ</button>
+            </form>
+        </section>
+
+        <!-- 8. ТЕЛЕФОН УЧАСТНИКА В УПРАВЛЯЕМОЙ ИГРЕ -->
+        <section id="live-player-screen" class="hidden max-w-2xl mx-auto w-full space-y-4">
+            <div class="flex items-center justify-between text-xs font-semibold">
+                <span id="lp-name" class="px-3 py-1 rounded-full bg-natgeo-card border border-natgeo-cardBorder text-white flex items-center gap-2"><i class="fa-solid fa-user text-natgeo-yellow"></i><span id="lp-name-text"></span></span>
+                <span class="px-3 py-1 rounded-full bg-natgeo-card border border-natgeo-cardBorder text-natgeo-yellow">Очки: <span id="lp-score">0</span></span>
+            </div>
+
+            <div id="lp-lobby" class="bg-natgeo-card border border-natgeo-cardBorder rounded-2xl p-8 text-center space-y-3">
+                <i class="fa-solid fa-hourglass-half text-4xl text-natgeo-yellow animate-pulse"></i>
+                <h3 class="text-xl font-bold text-white font-oswald uppercase">Вы в игре!</h3>
+                <p class="text-sm text-natgeo-textMuted">Ждите, пока ведущий начнёт. Следите за экраном.</p>
+            </div>
+
+            <div id="lp-question" class="hidden bg-natgeo-card border border-natgeo-cardBorder rounded-2xl p-4 space-y-4">
+                <div class="flex items-center justify-between">
+                    <span id="lp-qnum" class="text-xs uppercase tracking-widest text-natgeo-yellow font-oswald"></span>
+                    <span id="lp-timer" class="font-oswald text-3xl font-bold text-natgeo-yellow">20</span>
+                </div>
+                <div class="w-full h-2 bg-natgeo-dark rounded-full overflow-hidden border border-natgeo-cardBorder">
+                    <div id="lp-timer-bar" class="h-full bg-natgeo-yellow transition-all duration-200" style="width:100%"></div>
+                </div>
+                <div class="w-full h-48 rounded-xl overflow-hidden bg-black photo-frame">
+                    <img id="lp-img" src="" alt="Фото" onerror="window.handleImageFallback(this)" class="w-full h-full object-cover">
+                </div>
+                <div id="lp-options" class="grid grid-cols-1 gap-3"></div>
+                <div id="lp-status" class="text-center text-sm font-semibold text-natgeo-textMuted"></div>
+                <div id="lp-fact" class="hidden p-3 rounded-xl bg-natgeo-slate border border-natgeo-cardBorder text-xs text-natgeo-textMuted leading-relaxed"></div>
+            </div>
+
+            <div id="lp-final" class="hidden bg-natgeo-card border border-natgeo-cardBorder rounded-2xl p-8 text-center space-y-3">
+                <i class="fa-solid fa-trophy text-5xl text-natgeo-yellow"></i>
+                <h3 class="text-2xl font-bold text-white font-oswald uppercase">Игра завершена!</h3>
+                <div id="lp-final-score" class="text-5xl font-extrabold text-natgeo-yellow font-oswald">0 / 0</div>
+                <div id="lp-final-place" class="text-sm text-natgeo-textMuted"></div>
+            </div>
+        </section>
+
+        <!-- 9. ПУЛЬТ ВЕДУЩЕГО / ЭКРАН ДЛЯ ПРОЕКТОРА -->
+        <section id="live-host-screen" class="hidden w-full space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-natgeo-cardBorder pb-3">
+                <div class="flex items-center gap-3 flex-wrap">
+                    <h2 id="lh-title" class="text-xl sm:text-2xl font-bold text-white font-oswald uppercase"></h2>
+                    <span class="px-2.5 py-1 rounded-md bg-natgeo-yellow text-black text-xs font-extrabold tracking-widest font-oswald">КОД <span id="lh-code"></span></span>
+                    <span class="px-2.5 py-1 rounded-md bg-natgeo-card border border-natgeo-cardBorder text-xs text-white font-bold"><i class="fa-solid fa-users text-natgeo-yellow mr-1"></i><span id="lh-players-count">0</span></span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="showSessionQR(hostSession && hostSession.code, hostSession && hostSession.name)" class="px-3 py-2 bg-natgeo-slate hover:bg-natgeo-cardBorder border border-natgeo-cardBorder text-xs text-white rounded-lg font-bold cursor-pointer"><i class="fa-solid fa-qrcode text-natgeo-yellow mr-1"></i>QR</button>
+                    <button onclick="leaveLiveHost()" class="px-3 py-2 bg-natgeo-slate hover:bg-natgeo-cardBorder border border-natgeo-cardBorder text-xs text-white rounded-lg font-bold cursor-pointer">К списку игр</button>
+                </div>
+            </div>
+
+            <div id="lh-lobby" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-natgeo-card border border-natgeo-cardBorder rounded-2xl p-6 text-center space-y-3 flex flex-col items-center">
+                    <h3 class="text-sm font-bold text-natgeo-yellow uppercase tracking-wider font-oswald">Отсканируйте, чтобы войти</h3>
+                    <div id="lh-qr" class="p-3 bg-white rounded-xl shadow-lg"></div>
+                    <p id="lh-link" class="text-[11px] text-natgeo-textMuted break-all"></p>
+                </div>
+                <div class="bg-natgeo-card border border-natgeo-cardBorder rounded-2xl p-6 space-y-4">
+                    <h3 class="text-sm font-bold text-white uppercase tracking-wider font-oswald">Подключились: <span id="lh-lobby-count">0</span></h3>
+                    <div id="lh-players" class="flex flex-wrap gap-2 min-h-[4rem]"></div>
+                    <p class="text-xs text-natgeo-textMuted">Вопросов: <span id="lh-total-q">0</span> · время на ответ: <span id="lh-seconds">20</span> сек</p>
+                    <button onclick="hostStartGame()" class="w-full py-4 bg-natgeo-yellow hover:bg-natgeo-yellowDark text-black font-extrabold text-base rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2">
+                        <span>НАЧАТЬ ИГРУ</span><i class="fa-solid fa-play"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="lh-game" class="hidden space-y-4">
+                <div class="flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-2.5 flex-wrap">
+                        <span id="lh-cat" class="px-2.5 py-1 rounded-md bg-natgeo-yellow text-black font-extrabold text-xs uppercase font-oswald tracking-wider"></span>
+                        <span id="lh-qnum" class="text-natgeo-yellow uppercase tracking-widest text-xs font-oswald"></span>
+                    </div>
+                    <div id="lh-timer-wrap" class="flex items-center gap-3">
+                        <span id="lh-timer" class="font-oswald text-5xl sm:text-6xl font-bold text-natgeo-yellow">20</span>
+                    </div>
+                </div>
+                <div class="w-full h-2 bg-natgeo-card rounded-full overflow-hidden border border-natgeo-cardBorder">
+                    <div id="lh-timer-bar" class="h-full bg-natgeo-yellow transition-all duration-200" style="width:100%"></div>
+                </div>
+
+                <div class="relative w-full h-64 sm:h-[26rem] rounded-xl overflow-hidden bg-black photo-frame flex items-center justify-center">
+                    <img id="lh-img" src="" alt="Фото" onerror="window.handleImageFallback(this)" class="w-full h-full object-cover">
+                    <div class="absolute top-3 left-3 bg-black/85 px-3 py-1.5 rounded-md border border-white/15 text-xs text-natgeo-yellow font-semibold" id="lh-zoom"></div>
+                </div>
+
+                <h3 id="lh-prompt" class="text-lg sm:text-2xl font-bold text-white font-oswald tracking-wide"></h3>
+                <div id="lh-options" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+
+                <div id="lh-fact" class="hidden p-4 rounded-xl bg-natgeo-slate border border-natgeo-cardBorder">
+                    <h4 id="lh-fact-title" class="font-bold text-emerald-400 font-oswald text-lg"></h4>
+                    <p id="lh-fact-text" class="text-sm text-natgeo-textMuted leading-relaxed mt-1"></p>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-between gap-3 bg-natgeo-card border border-natgeo-cardBorder rounded-2xl p-3">
+                    <div id="lh-answered" class="text-sm font-semibold text-white pl-2"></div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button id="lh-add10" onclick="hostAddTime(10)" class="px-4 py-2.5 bg-natgeo-slate hover:bg-natgeo-cardBorder border border-natgeo-cardBorder text-white text-sm font-bold rounded-lg cursor-pointer"><i class="fa-solid fa-clock text-natgeo-yellow mr-1"></i>+10 сек</button>
+                        <button id="lh-add30" onclick="hostAddTime(30)" class="px-4 py-2.5 bg-natgeo-slate hover:bg-natgeo-cardBorder border border-natgeo-cardBorder text-white text-sm font-bold rounded-lg cursor-pointer">+30 сек</button>
+                        <button id="lh-primary" onclick="hostPrimary()" class="px-6 py-2.5 bg-natgeo-yellow hover:bg-natgeo-yellowDark text-black text-sm font-extrabold rounded-lg cursor-pointer"></button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="lh-final" class="hidden space-y-4">
+                <div class="text-center space-y-2">
+                    <i class="fa-solid fa-trophy text-5xl text-natgeo-yellow"></i>
+                    <h3 class="text-3xl font-bold text-white font-oswald uppercase">Итоги игры</h3>
+                </div>
+                <div class="bg-natgeo-card border border-natgeo-cardBorder rounded-2xl overflow-hidden">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-natgeo-slate text-xs uppercase text-natgeo-textMuted font-semibold">
+                            <tr><th class="py-3 px-4 text-center w-16">Место</th><th class="py-3 px-4">Участник</th><th class="py-3 px-4 text-center">Очки</th><th class="py-3 px-4 text-center">Время</th></tr>
+                        </thead>
+                        <tbody id="lh-final-body" class="divide-y divide-natgeo-cardBorder text-white"></tbody>
+                    </table>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button onclick="showSessionLeaderboard(hostSession.code)" class="flex-1 py-3 bg-natgeo-slate hover:bg-natgeo-cardBorder border border-natgeo-cardBorder text-white font-bold text-sm rounded-xl cursor-pointer">Открыть в общем рейтинге</button>
+                    <button onclick="leaveLiveHost()" class="flex-1 py-3 bg-natgeo-yellow hover:bg-natgeo-yellowDark text-black font-extrabold text-sm rounded-xl cursor-pointer">К списку игр</button>
                 </div>
             </div>
         </section>
@@ -552,7 +779,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, getDocs, deleteDoc, doc, setDoc, getDoc, updateDoc, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'natgeo-close-up-quiz-ru';
 
@@ -618,7 +845,7 @@
             }
         }
 
-        window.savePlayerResult = async function(playerName, score, totalQuestions, timeSeconds, categoryKey, categoryTitle) {
+        window.savePlayerResult = async function(playerName, score, totalQuestions, timeSeconds, categoryKey, categoryTitle, sessionId) {
             const entry = {
                 playerName: playerName,
                 score: score,
@@ -626,6 +853,7 @@
                 timeSeconds: timeSeconds,
                 categoryKey: categoryKey,
                 categoryTitle: categoryTitle,
+                sessionId: sessionId || null,
                 timestamp: Date.now(),
                 dateString: new Date().toLocaleString('ru-RU', {
                     day: '2-digit', month: '2-digit', year: 'numeric',
@@ -661,7 +889,110 @@
             }
         };
 
-        initStorage();
+        const storageReady = initStorage();
+
+        // ===== Игры с уникальными кодами и управляемый режим =====
+        const cloudOk = () => !!(db && currentUser);
+        const dataCol = (name) => collection(db, 'artifacts', appId, 'public', 'data', name);
+        const dataDoc = (name, id) => doc(db, 'artifacts', appId, 'public', 'data', name, id);
+        const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        function genCode() {
+            let s = '';
+            for (let i = 0; i < 5; i++) s += CODE_ALPHABET[Math.floor(Math.random() * CODE_ALPHABET.length)];
+            return s;
+        }
+
+        window.cloudAvailable = () => cloudOk();
+
+        window.createSession = async function(data) {
+            await storageReady;
+            if (!cloudOk()) throw new Error('offline');
+            let code = genCode();
+            for (let i = 0; i < 5; i++) {
+                const ex = await getDoc(dataDoc('quiz_sessions_ru', code));
+                if (!ex.exists()) break;
+                code = genCode();
+            }
+            await setDoc(dataDoc('quiz_sessions_ru', code), {
+                ...data,
+                code: code,
+                createdAt: Date.now(),
+                state: { phase: 'lobby', qIndex: -1, timerSec: data.seconds || 20, v: 0 }
+            });
+            return code;
+        };
+
+        window.getSession = async function(code) {
+            await storageReady;
+            if (!cloudOk()) return null;
+            const snap = await getDoc(dataDoc('quiz_sessions_ru', code));
+            return snap.exists() ? { ...snap.data(), code: snap.id } : null;
+        };
+
+        window.watchSessions = async function(cb) {
+            await storageReady;
+            if (!cloudOk()) { cb([]); return () => {}; }
+            return onSnapshot(dataCol('quiz_sessions_ru'),
+                (snap) => cb(snap.docs.map(d => ({ ...d.data(), code: d.id }))),
+                (err) => { console.warn('sessions:', err); cb([]); });
+        };
+
+        window.watchSession = async function(code, cb) {
+            await storageReady;
+            if (!cloudOk()) return () => {};
+            return onSnapshot(dataDoc('quiz_sessions_ru', code),
+                (snap) => cb(snap.exists() ? { ...snap.data(), code: snap.id } : null),
+                (err) => console.warn('session:', err));
+        };
+
+        window.updateSessionState = async function(code, patch) {
+            await storageReady;
+            const upd = {};
+            Object.keys(patch).forEach(k => { upd['state.' + k] = patch[k]; });
+            await updateDoc(dataDoc('quiz_sessions_ru', code), upd);
+        };
+
+        window.joinLive = async function(code, pid, name) {
+            await storageReady;
+            if (!cloudOk()) throw new Error('offline');
+            await setDoc(dataDoc('quiz_live_ru', `${code}_p_${pid}`), {
+                type: 'player', sessionId: code, playerId: pid, name: name, ts: Date.now()
+            });
+        };
+
+        window.submitAnswer = async function(code, qIdx, pid, name, choice, ms) {
+            await storageReady;
+            if (!cloudOk()) throw new Error('offline');
+            await setDoc(dataDoc('quiz_live_ru', `${code}_a_${qIdx}_${pid}`), {
+                type: 'answer', sessionId: code, qIdx: qIdx, playerId: pid, name: name, choice: choice, ms: ms, ts: Date.now()
+            });
+        };
+
+        window.watchLive = async function(code, cb) {
+            await storageReady;
+            if (!cloudOk()) return () => {};
+            return onSnapshot(query(dataCol('quiz_live_ru'), where('sessionId', '==', code)),
+                (snap) => cb(snap.docs.map(d => d.data())),
+                (err) => console.warn('live:', err));
+        };
+
+        window.finalizeLive = async function(code, entries) {
+            await storageReady;
+            if (!cloudOk()) throw new Error('offline');
+            await Promise.all(entries.map(e => setDoc(dataDoc('quiz_results_ru', `${code}_${e.playerId}`), e)));
+        };
+
+        window.deleteSession = async function(code) {
+            await storageReady;
+            if (!cloudOk()) return;
+            const liveSnap = await getDocs(query(dataCol('quiz_live_ru'), where('sessionId', '==', code)));
+            const resSnap = await getDocs(query(dataCol('quiz_results_ru'), where('sessionId', '==', code)));
+            await Promise.all([
+                ...liveSnap.docs.map(d => deleteDoc(d.ref)),
+                ...resSnap.docs.map(d => deleteDoc(d.ref))
+            ]);
+            await deleteDoc(dataDoc('quiz_sessions_ru', code));
+        };
     </script>
 
     <!-- Данные квиза по 4 рубрикам и вся игровая логика -->
@@ -1014,6 +1345,10 @@
             resultsScreen.classList.add('hidden');
             hostScreen.classList.add('hidden');
             editorScreen.classList.add('hidden');
+            ['sessions-screen', 'join-screen', 'live-host-screen', 'live-player-screen'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
         }
 
         function goToStartScreen() {
@@ -1178,7 +1513,7 @@
             document.getElementById('final-time').textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 
             if (window.savePlayerResult) {
-                window.savePlayerResult(playerName, score, activeQuestions.length, timeSeconds, selectedCategoryKey, categoryTitle);
+                window.savePlayerResult(playerName, score, activeQuestions.length, timeSeconds, selectedCategoryKey, categoryTitle, currentSessionId);
             }
         }
 
@@ -1209,7 +1544,7 @@
             qrContainer.innerHTML = '';
 
             new QRCode(qrContainer, {
-                text: window.location.href,
+                text: BASE_URL(),
                 width: 160,
                 height: 160,
                 colorDark: "#000000",
@@ -1231,6 +1566,11 @@
 
         window.updateLeaderboardData = function(results) {
             allLeaderboardResults = [...results];
+            try {
+                renderSessionsList();
+                renderResultTop();
+                if (lpPhase === 'finished' && currentSession) renderLpFinal();
+            } catch (e) { console.warn(e); }
             renderLeaderboardUI();
         };
 
@@ -1245,6 +1585,7 @@
             let filtered = currentLeaderboardFilter === 'all'
                 ? [...allLeaderboardResults]
                 : allLeaderboardResults.filter(r => r.categoryKey === currentLeaderboardFilter);
+            filtered = filtered.filter(sessionMatches);
 
             filtered.sort((a, b) => {
                 if (b.score !== a.score) return b.score - a.score;
@@ -1288,7 +1629,7 @@
                     <td class="py-3 px-4 text-center font-oswald text-base">${rankBadge}</td>
                     <td class="py-3 px-4 font-semibold text-white">
                         <div class="flex items-center gap-2">
-                            <span>${row.playerName}</span>
+                            <span>${escapeHtml(row.playerName)}</span>
                             ${idx === 0 ? '<span class="text-[10px] px-1.5 py-0.5 rounded bg-natgeo-yellow text-black uppercase font-extrabold">Лидер</span>' : ''}
                         </div>
                     </td>
@@ -1471,7 +1812,652 @@
             });
         }
 
+        // ============================================================================
+        // ИГРЫ С УНИКАЛЬНЫМИ КОДАМИ: ОБЩИЕ ФУНКЦИИ
+        // ============================================================================
+        const BASE_URL = () => location.origin + location.pathname;
+        const setT = (id, text) => { document.getElementById(id).textContent = text; };
+        const cmpResults = (a, b) => (b.score - a.score) || ((a.timeSeconds || 9999) - (b.timeSeconds || 9999));
+        const LETTERS = ['А', 'Б', 'В', 'Г'];
+
+        function escapeHtml(s) {
+            return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        let isPlayerMode = false;
+        let currentSessionId = null;
+        let currentSession = null;
+        let allSessions = [];
+        let currentSessionFilter = 'all';
+        let lpPhase = 'lobby';
+
+        const playerId = (() => {
+            const fresh = () => 'p' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+            try {
+                let id = localStorage.getItem('quizPlayerId');
+                if (!id) { id = fresh(); localStorage.setItem('quizPlayerId', id); }
+                return id;
+            } catch (e) { return fresh(); }
+        })();
+
+        function sessionMatches(r) {
+            if (currentSessionFilter === 'all') return true;
+            if (currentSessionFilter === 'open') return !r.sessionId;
+            return r.sessionId === currentSessionFilter;
+        }
+
+        function setSessionFilter(v) {
+            currentSessionFilter = v;
+            renderLeaderboardUI();
+        }
+
+        function renderSessionFilterOptions() {
+            const sel = document.getElementById('lb-session-select');
+            if (!sel) return;
+            const sorted = [...allSessions].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            sel.innerHTML = '<option value="all">Все игры</option><option value="open">Открытая игра (без кода)</option>' +
+                sorted.map(s => `<option value="${s.code}">${escapeHtml(s.name)} · ${s.code}</option>`).join('');
+            sel.value = currentSessionFilter;
+            if (sel.value !== currentSessionFilter) { currentSessionFilter = 'all'; sel.value = 'all'; }
+        }
+
+        function showSessionLeaderboard(code) {
+            currentSessionFilter = code;
+            toggleHostMode();
+            renderSessionFilterOptions();
+            renderLeaderboardUI();
+        }
+
+        // ---------- Запуск приложения (обычный вход или вход по коду) ----------
+        async function initApp() {
+            try {
+                const savedName = localStorage.getItem('quizPlayerName');
+                if (savedName) document.getElementById('player-name').value = savedName;
+            } catch (e) {}
+
+            const code = (new URLSearchParams(location.search).get('s') || '').trim().toUpperCase();
+            if (code) {
+                isPlayerMode = true;
+                document.getElementById('header-actions').classList.add('hidden');
+                const logoBtn = document.querySelector('header button');
+                if (logoBtn) logoBtn.onclick = null;
+                const lbBtn = document.getElementById('results-lb-btn');
+                if (lbBtn) lbBtn.classList.add('hidden');
+                await initPlayerSession(code);
+            } else if (window.watchSessions) {
+                window.watchSessions(list => {
+                    allSessions = list;
+                    renderSessionsList();
+                    renderSessionFilterOptions();
+                });
+            }
+        }
+
+        async function initPlayerSession(code) {
+            let s = null;
+            try { s = await window.getSession(code); } catch (e) { console.warn(e); }
+            if (!s) {
+                showCustomModal({
+                    title: 'Игра не найдена',
+                    message: 'Проверьте QR-код или ссылку. Возможно, ведущий удалил эту игру, либо нет интернета.',
+                    icon: 'fa-triangle-exclamation'
+                });
+                return;
+            }
+            currentSession = s;
+            currentSessionId = s.code;
+
+            if (s.mode === 'live') {
+                setT('join-session-name', s.name);
+                try {
+                    const savedName = localStorage.getItem('quizPlayerName');
+                    if (savedName) document.getElementById('join-name').value = savedName;
+                } catch (e) {}
+                hideAllScreens();
+                document.getElementById('join-screen').classList.remove('hidden');
+            } else {
+                setT('session-banner-name', s.name);
+                document.getElementById('session-banner').classList.remove('hidden');
+            }
+        }
+
+        // ---------- Экран «Игры и QR» ----------
+        function openSessionsScreen() {
+            hideAllScreens();
+            document.getElementById('sessions-screen').classList.remove('hidden');
+            const sel = document.getElementById('session-category');
+            if (!sel.options.length) {
+                ['clothes', 'eyes', 'paws', 'teeth'].forEach(k => {
+                    const o = document.createElement('option');
+                    o.value = k; o.textContent = quizCategories[k].title;
+                    sel.appendChild(o);
+                });
+                const mix = document.createElement('option');
+                mix.value = 'mix'; mix.textContent = 'Все рубрики (Микс, 10 вопросов)';
+                sel.appendChild(mix);
+            }
+            const warn = document.getElementById('sessions-cloud-warning');
+            warn.classList.toggle('hidden', !(window.cloudAvailable && !window.cloudAvailable()));
+            renderSessionsList();
+        }
+
+        function onSessionModeChange() {
+            const mode = document.querySelector('input[name="session-mode"]:checked').value;
+            document.getElementById('live-options').classList.toggle('hidden', mode !== 'live');
+        }
+
+        function buildLiveOrder(catKey) {
+            const refs = [];
+            if (catKey === 'mix') {
+                ['clothes', 'eyes', 'paws', 'teeth'].forEach((k, idx) => {
+                    const n = idx < 2 ? 3 : 2;
+                    for (let j = 0; j < n; j++) refs.push({ c: k, i: j });
+                });
+                refs.sort(() => Math.random() - 0.5);
+            } else {
+                quizCategories[catKey].questions.forEach((_, j) => refs.push({ c: catKey, i: j }));
+            }
+            return refs;
+        }
+
+        function liveQuestion(ref) {
+            const cat = quizCategories[ref.c];
+            return { ...cat.questions[ref.i], categoryTitle: cat.title, prompt: cat.prompt };
+        }
+
+        async function createNewSession() {
+            const name = document.getElementById('session-name').value.trim();
+            if (!name) return;
+            const mode = document.querySelector('input[name="session-mode"]:checked').value;
+            const seconds = Math.min(120, Math.max(5, parseInt(document.getElementById('session-seconds').value, 10) || 20));
+            const data = { name: name, mode: mode, seconds: seconds };
+            if (mode === 'live') {
+                data.categoryKey = document.getElementById('session-category').value;
+                data.order = buildLiveOrder(data.categoryKey);
+            }
+            try {
+                const code = await window.createSession(data);
+                document.getElementById('session-name').value = '';
+                showSessionQR(code, name);
+            } catch (e) {
+                console.warn(e);
+                showCustomModal({
+                    title: 'Не удалось создать игру',
+                    message: 'Проверьте интернет и правила доступа Firestore (нужен доступ к коллекциям quiz_sessions_ru и quiz_live_ru).',
+                    icon: 'fa-triangle-exclamation'
+                });
+            }
+        }
+
+        function renderSessionsList() {
+            const box = document.getElementById('sessions-list');
+            if (!box) return;
+            const list = [...allSessions].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            if (!list.length) {
+                box.innerHTML = '<div class="p-6 text-center text-xs text-natgeo-textMuted bg-natgeo-card border border-natgeo-cardBorder rounded-2xl">Пока нет сохранённых игр. Создайте первую выше.</div>';
+                return;
+            }
+            const btn = 'px-3 py-2 bg-natgeo-slate hover:bg-natgeo-cardBorder border border-natgeo-cardBorder text-xs text-white rounded-lg font-bold cursor-pointer';
+            box.innerHTML = list.map(s => {
+                const live = s.mode === 'live';
+                const cnt = allLeaderboardResults.filter(r => r.sessionId === s.code).length;
+                const date = new Date(s.createdAt || 0).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                return `
+                <div class="bg-natgeo-card border border-natgeo-cardBorder rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h4 class="font-oswald text-lg text-white uppercase tracking-wide">${escapeHtml(s.name)}</h4>
+                            <span class="text-[10px] px-2 py-0.5 rounded font-bold uppercase ${live ? 'bg-natgeo-yellow text-black' : 'bg-natgeo-slate text-natgeo-textMuted border border-natgeo-cardBorder'}">${live ? 'Управляемая' : 'Свободная'}</span>
+                        </div>
+                        <p class="text-xs text-natgeo-textMuted mt-1">Код <span class="text-natgeo-yellow font-bold tracking-widest">${s.code}</span> · ${date} · результатов: ${cnt}${live ? ' · ' + (s.seconds || 20) + ' сек на вопрос' : ''}</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        ${live ? `<button class="px-3 py-2 bg-natgeo-yellow hover:bg-natgeo-yellowDark text-black text-xs rounded-lg font-extrabold cursor-pointer" onclick="openLiveHost('${s.code}')"><i class="fa-solid fa-play mr-1"></i>Вести игру</button>` : ''}
+                        <button class="${btn}" onclick="showSessionQR('${s.code}')"><i class="fa-solid fa-qrcode text-natgeo-yellow mr-1"></i>QR</button>
+                        <button class="${btn}" onclick="showSessionLeaderboard('${s.code}')"><i class="fa-solid fa-list-ol text-natgeo-yellow mr-1"></i>Рейтинг</button>
+                        <button class="px-3 py-2 bg-rose-950/60 hover:bg-rose-900 border border-rose-800 text-xs text-rose-200 rounded-lg font-bold cursor-pointer" onclick="confirmDeleteSession('${s.code}')"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function confirmDeleteSession(code) {
+            const s = allSessions.find(x => x.code === code);
+            showCustomModal({
+                title: 'Удалить игру?',
+                message: `Игра «${s ? s.name : code}», её QR-код и все результаты будут удалены без возможности восстановления.`,
+                icon: 'fa-triangle-exclamation',
+                confirmText: 'Да, удалить',
+                cancelText: 'Отмена',
+                onConfirm: () => { if (window.deleteSession) window.deleteSession(code).catch(console.warn); }
+            });
+        }
+
+        // ---------- QR-код игры ----------
+        function showSessionQR(code, name) {
+            if (!code) return;
+            const s = allSessions.find(x => x.code === code);
+            const url = BASE_URL() + '?s=' + code;
+            setT('qr-modal-title', name || (s ? s.name : 'QR-код игры'));
+            setT('qr-modal-code', code);
+            const c = document.getElementById('qr-modal-container');
+            c.innerHTML = '';
+            new QRCode(c, { text: url, width: 220, height: 220, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+            document.getElementById('qr-modal-link').value = url;
+            const m = document.getElementById('qr-modal');
+            m.classList.remove('hidden');
+            m.classList.add('flex');
+        }
+
+        function closeQrModal() {
+            document.getElementById('qr-modal').classList.add('hidden');
+        }
+
+        function copyQrLink() {
+            const input = document.getElementById('qr-modal-link');
+            input.select();
+            try {
+                if (navigator.clipboard) navigator.clipboard.writeText(input.value);
+                else document.execCommand('copy');
+            } catch (e) { try { document.execCommand('copy'); } catch (e2) {} }
+        }
+
+        // ---------- Свободная игра: топ-5 для участника ----------
+        function renderResultTop() {
+            const box = document.getElementById('result-top-list');
+            if (!box) return;
+            if (!currentSessionId || (currentSession && currentSession.mode === 'live')) { box.classList.add('hidden'); return; }
+            const list = allLeaderboardResults.filter(r => r.sessionId === currentSessionId).sort(cmpResults).slice(0, 5);
+            if (!list.length) { box.classList.add('hidden'); return; }
+            box.classList.remove('hidden');
+            box.innerHTML = '<div class="text-xs uppercase font-bold text-natgeo-yellow tracking-wider font-oswald">Лучшие в этой игре</div>' +
+                list.map((r, i) => `<div class="flex items-center justify-between text-sm"><span class="text-white"><span class="text-natgeo-textMuted mr-2">${i + 1}.</span>${escapeHtml(r.playerName)}</span><span class="font-oswald text-natgeo-yellow">${r.score} / ${r.totalQuestions || 5}</span></div>`).join('');
+        }
+
+        // ============================================================================
+        // УПРАВЛЯЕМЫЙ РЕЖИМ: ПУЛЬТ ВЕДУЩЕГО
+        // ============================================================================
+        let hostSession = null, hostState = {}, hostQuestions = [];
+        let hostLivePlayers = [], hostLiveAnswers = [];
+        let hostLiveUnsub = null, hostTimerInt = null, hostEndsAt = 0, hostQrCode = null;
+
+        function stopLiveHost() {
+            if (hostTimerInt) { clearInterval(hostTimerInt); hostTimerInt = null; }
+            if (hostLiveUnsub) { try { hostLiveUnsub(); } catch (e) {} hostLiveUnsub = null; }
+            hostSession = null; hostQrCode = null;
+            hostLivePlayers = []; hostLiveAnswers = [];
+        }
+
+        function leaveLiveHost() {
+            stopLiveHost();
+            openSessionsScreen();
+        }
+
+        async function openLiveHost(code) {
+            let s = allSessions.find(x => x.code === code);
+            if (!s && window.getSession) s = await window.getSession(code);
+            if (!s) return;
+            stopLiveHost();
+            hostSession = s;
+            hostQuestions = (s.order || []).map(liveQuestion);
+            hostState = { ...(s.state || { phase: 'lobby', qIndex: -1, v: 0 }) };
+
+            hideAllScreens();
+            document.getElementById('live-host-screen').classList.remove('hidden');
+
+            // если ведущий обновил страницу посреди вопроса — закрываем приём ответов
+            if (hostState.phase === 'question') setHostState({ phase: 'locked' });
+
+            hostLiveUnsub = await window.watchLive(code, docs => {
+                hostLivePlayers = docs.filter(d => d.type === 'player');
+                hostLiveAnswers = docs.filter(d => d.type === 'answer');
+                renderLiveHost();
+            });
+            renderLiveHost();
+            hostTimerInt = setInterval(hostTick, 250);
+        }
+
+        function setHostState(patch) {
+            hostState = { ...hostState, ...patch };
+            if (hostSession) window.updateSessionState(hostSession.code, patch).catch(e => console.warn('state:', e));
+        }
+
+        function hostStartGame() { hostGoToQuestion(0); }
+
+        function hostGoToQuestion(idx) {
+            const sec = hostSession.seconds || 20;
+            hostEndsAt = Date.now() + sec * 1000;
+            setHostState({ phase: 'question', qIndex: idx, timerSec: sec, v: (hostState.v || 0) + 1 });
+            renderLiveHost();
+        }
+
+        function hostAddTime(sec) {
+            if (hostState.phase !== 'question' && hostState.phase !== 'locked') return;
+            const rem = hostState.phase === 'question' ? Math.max(0, hostEndsAt - Date.now()) : 0;
+            const newRem = rem + sec * 1000;
+            hostEndsAt = Date.now() + newRem;
+            setHostState({ phase: 'question', timerSec: Math.max(1, Math.round(newRem / 1000)), v: (hostState.v || 0) + 1 });
+            renderLiveHost();
+        }
+
+        function hostPrimary() {
+            const phase = hostState.phase;
+            if (phase === 'question' || phase === 'locked') {
+                setHostState({ phase: 'reveal' });
+                renderLiveHost();
+            } else if (phase === 'reveal') {
+                if (hostState.qIndex + 1 < hostQuestions.length) hostGoToQuestion(hostState.qIndex + 1);
+                else hostFinish();
+            }
+        }
+
+        function hostTick() {
+            const scr = document.getElementById('live-host-screen');
+            if (!hostSession || scr.classList.contains('hidden')) return;
+            if (hostState.phase !== 'question') return;
+            const rem = Math.max(0, hostEndsAt - Date.now());
+            updateHostTimerUI(rem);
+            if (rem <= 0) {
+                setHostState({ phase: 'locked' });
+                renderLiveHost();
+            }
+        }
+
+        function updateHostTimerUI(rem) {
+            const sec = Math.ceil(rem / 1000);
+            const t = document.getElementById('lh-timer');
+            t.textContent = sec;
+            t.className = 'font-oswald text-5xl sm:text-6xl font-bold ' + (sec <= 5 ? 'text-rose-400' : 'text-natgeo-yellow');
+            const total = Math.max(1, (hostState.timerSec || 20) * 1000);
+            document.getElementById('lh-timer-bar').style.width = Math.max(0, Math.min(100, rem / total * 100)) + '%';
+        }
+
+        function computeStandings() {
+            const by = {};
+            hostLivePlayers.forEach(p => { by[p.playerId] = { playerId: p.playerId, name: p.name, score: 0, ms: 0 }; });
+            hostLiveAnswers.forEach(a => {
+                const p = by[a.playerId] || (by[a.playerId] = { playerId: a.playerId, name: a.name || 'Игрок', score: 0, ms: 0 });
+                const q = hostQuestions[a.qIdx];
+                if (q && a.choice === q.correct) { p.score++; p.ms += a.ms || 0; }
+            });
+            return Object.values(by).sort((a, b) => (b.score - a.score) || (a.ms - b.ms));
+        }
+
+        async function hostFinish() {
+            const standings = computeStandings();
+            const catTitle = hostSession.categoryKey === 'mix'
+                ? 'Все рубрики (Микс)'
+                : ((quizCategories[hostSession.categoryKey] || {}).title || 'Квиз');
+            const dateString = new Date().toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            const entries = standings.map(p => ({
+                playerId: p.playerId,
+                playerName: p.name,
+                score: p.score,
+                totalQuestions: hostQuestions.length,
+                timeSeconds: Math.max(1, Math.round(p.ms / 1000)),
+                categoryKey: hostSession.categoryKey,
+                categoryTitle: catTitle,
+                sessionId: hostSession.code,
+                timestamp: Date.now(),
+                dateString: dateString
+            }));
+            try { await window.finalizeLive(hostSession.code, entries); } catch (e) { console.warn('finalize:', e); }
+            setHostState({ phase: 'finished' });
+            renderLiveHost();
+        }
+
+        function renderLiveHost() {
+            if (!hostSession) return;
+            const phase = hostState.phase;
+            setT('lh-title', hostSession.name);
+            setT('lh-code', hostSession.code);
+            setT('lh-players-count', hostLivePlayers.length);
+            document.getElementById('lh-lobby').classList.toggle('hidden', phase !== 'lobby');
+            document.getElementById('lh-game').classList.toggle('hidden', phase === 'lobby' || phase === 'finished');
+            document.getElementById('lh-final').classList.toggle('hidden', phase !== 'finished');
+            if (phase === 'lobby') renderHostLobby();
+            else if (phase === 'finished') renderHostFinal();
+            else renderHostGame();
+        }
+
+        function renderHostLobby() {
+            if (hostQrCode !== hostSession.code) {
+                const url = BASE_URL() + '?s=' + hostSession.code;
+                const c = document.getElementById('lh-qr');
+                c.innerHTML = '';
+                new QRCode(c, { text: url, width: 220, height: 220, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+                setT('lh-link', url);
+                hostQrCode = hostSession.code;
+            }
+            setT('lh-lobby-count', hostLivePlayers.length);
+            setT('lh-total-q', hostQuestions.length);
+            setT('lh-seconds', hostSession.seconds || 20);
+            document.getElementById('lh-players').innerHTML = hostLivePlayers.length
+                ? hostLivePlayers.map(p => `<span class="px-3 py-1 rounded-full bg-natgeo-slate border border-natgeo-cardBorder text-xs text-white font-semibold">${escapeHtml(p.name)}</span>`).join('')
+                : '<span class="text-xs text-natgeo-textMuted">Пока никого. Покажите QR-код аудитории.</span>';
+        }
+
+        function renderHostGame() {
+            const st = hostState, phase = st.phase;
+            const q = hostQuestions[st.qIndex];
+            if (!q) return;
+            setT('lh-cat', q.categoryTitle);
+            setT('lh-qnum', `Вопрос ${st.qIndex + 1} из ${hostQuestions.length}`);
+            setT('lh-prompt', q.prompt);
+            setT('lh-zoom', phase === 'reveal' ? 'ПОЛНЫЙ КАДР' : 'МАКРО КРУПНЫЙ ПЛАН');
+
+            const img = document.getElementById('lh-img');
+            const src = phase === 'reveal' ? q.fullUrl : q.closeUrl;
+            if (img.dataset.src !== src) { img.dataset.src = src; img.src = src; }
+
+            const ans = hostLiveAnswers.filter(a => a.qIdx === st.qIndex);
+            const counts = q.options.map((_, i) => ans.filter(a => a.choice === i).length);
+
+            document.getElementById('lh-options').innerHTML = q.options.map((t, i) => {
+                let cls = 'border-natgeo-cardBorder bg-natgeo-dark/90 text-white';
+                if (phase === 'reveal') {
+                    cls = i === q.correct
+                        ? 'border-emerald-500 bg-emerald-950/80 text-emerald-200'
+                        : 'border-natgeo-cardBorder bg-natgeo-dark/90 text-white opacity-40';
+                }
+                const cnt = phase === 'reveal' ? `<span class="font-oswald text-xl">${counts[i]}</span>` : '';
+                return `<div class="p-4 rounded-xl border ${cls} flex items-center justify-between gap-3 text-base sm:text-xl font-semibold">
+                    <span class="flex items-center gap-3"><span class="w-9 h-9 rounded-full bg-natgeo-card border border-natgeo-cardBorder flex items-center justify-center text-sm text-natgeo-yellow font-bold flex-shrink-0">${LETTERS[i]}</span><span>${escapeHtml(t)}</span></span>${cnt}</div>`;
+            }).join('');
+
+            const total = hostLivePlayers.length;
+            const answeredEl = document.getElementById('lh-answered');
+            answeredEl.textContent = `Ответили: ${ans.length} из ${total}`;
+            answeredEl.className = 'text-sm font-semibold pl-2 ' + (total > 0 && ans.length >= total ? 'text-emerald-400' : 'text-white');
+
+            const factBox = document.getElementById('lh-fact');
+            if (phase === 'reveal') {
+                setT('lh-fact-title', 'Это ' + q.name);
+                setT('lh-fact-text', q.fact);
+                factBox.classList.remove('hidden');
+            } else {
+                factBox.classList.add('hidden');
+            }
+
+            const timerWrap = document.getElementById('lh-timer-wrap');
+            const bar = document.getElementById('lh-timer-bar');
+            timerWrap.classList.toggle('invisible', phase === 'reveal');
+            bar.parentElement.classList.toggle('invisible', phase === 'reveal');
+            if (phase === 'question') updateHostTimerUI(Math.max(0, hostEndsAt - Date.now()));
+            else if (phase === 'locked') updateHostTimerUI(0);
+
+            const canAdd = phase === 'question' || phase === 'locked';
+            document.getElementById('lh-add10').classList.toggle('hidden', !canAdd);
+            document.getElementById('lh-add30').classList.toggle('hidden', !canAdd);
+            const last = st.qIndex + 1 >= hostQuestions.length;
+            setT('lh-primary', phase === 'reveal' ? (last ? 'ЗАВЕРШИТЬ ИГРУ' : 'СЛЕДУЮЩИЙ ВОПРОС') : 'ПОКАЗАТЬ ОТВЕТ');
+        }
+
+        function renderHostFinal() {
+            const standings = computeStandings();
+            const medal = i => i === 0 ? '<i class="fa-solid fa-crown text-natgeo-yellow"></i>'
+                : i === 1 ? '<i class="fa-solid fa-medal text-slate-300"></i>'
+                : i === 2 ? '<i class="fa-solid fa-medal text-amber-600"></i>' : (i + 1);
+            const fmt = ms => { const s = Math.max(1, Math.round(ms / 1000)); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
+            document.getElementById('lh-final-body').innerHTML = standings.length
+                ? standings.map((p, i) => `<tr class="${i === 0 ? 'bg-natgeo-yellow/10 font-bold' : ''}">
+                    <td class="py-3 px-4 text-center font-oswald text-base">${medal(i)}</td>
+                    <td class="py-3 px-4 font-semibold">${escapeHtml(p.name)}</td>
+                    <td class="py-3 px-4 text-center font-oswald text-natgeo-yellow text-base font-bold">${p.score} / ${hostQuestions.length}</td>
+                    <td class="py-3 px-4 text-center text-xs text-natgeo-textMuted">${fmt(p.ms)}</td></tr>`).join('')
+                : '<tr><td colspan="4" class="py-8 text-center text-xs text-natgeo-textMuted">Участников не было.</td></tr>';
+        }
+
+        // ============================================================================
+        // УПРАВЛЯЕМЫЙ РЕЖИМ: ТЕЛЕФОН УЧАСТНИКА
+        // ============================================================================
+        let lpUnsub = null, lpQuestions = [], lpPlayerName = '';
+        let lpQIdx = -2, lpV = -1, lpEndsAt = 0, lpTimerTotal = 20, lpQStart = 0, lpTimerInt = null;
+        let lpAnswered = null, lpMyAnswers = {};
+
+        async function joinLiveGame() {
+            const name = document.getElementById('join-name').value.trim();
+            if (!name || !currentSession) return;
+            lpPlayerName = name;
+            try { localStorage.setItem('quizPlayerName', name); } catch (e) {}
+            try {
+                await window.joinLive(currentSession.code, playerId, name);
+            } catch (e) {
+                console.warn(e);
+                showCustomModal({ title: 'Не удалось войти', message: 'Проверьте интернет и попробуйте ещё раз.', icon: 'fa-triangle-exclamation' });
+                return;
+            }
+            lpQuestions = (currentSession.order || []).map(liveQuestion);
+            hideAllScreens();
+            document.getElementById('live-player-screen').classList.remove('hidden');
+            setT('lp-name-text', name);
+            showLp('lp-lobby');
+            if (lpUnsub) { try { lpUnsub(); } catch (e) {} }
+            lpUnsub = await window.watchSession(currentSession.code, onLiveStateChange);
+        }
+
+        function showLp(id) {
+            ['lp-lobby', 'lp-question', 'lp-final'].forEach(x => document.getElementById(x).classList.toggle('hidden', x !== id));
+        }
+
+        function lpLocalScore(all) {
+            let n = 0;
+            Object.keys(lpMyAnswers).forEach(k => {
+                const idx = Number(k);
+                const q = lpQuestions[idx];
+                if (!q || lpMyAnswers[k] !== q.correct) return;
+                if (all || idx < lpQIdx || (idx === lpQIdx && lpPhase === 'reveal')) n++;
+            });
+            return n;
+        }
+
+        function onLiveStateChange(s) {
+            if (!s) return;
+            const st = s.state || {};
+            lpPhase = st.phase;
+            if (st.phase === 'lobby') { stopLpTimer(); showLp('lp-lobby'); return; }
+            if (st.phase === 'finished') { stopLpTimer(); renderLpFinal(); return; }
+
+            const q = lpQuestions[st.qIndex];
+            if (!q) return;
+            if (st.qIndex !== lpQIdx) {
+                lpQIdx = st.qIndex;
+                lpQStart = Date.now();
+                lpAnswered = lpMyAnswers[lpQIdx] !== undefined ? lpMyAnswers[lpQIdx] : null;
+            }
+            if (st.phase === 'question') {
+                if (st.v !== lpV) {
+                    lpV = st.v;
+                    lpTimerTotal = st.timerSec || 20;
+                    lpEndsAt = Date.now() + lpTimerTotal * 1000;
+                }
+                startLpTimer();
+            } else {
+                stopLpTimer();
+                updateLpTimerUI(0);
+            }
+            paintLp(q, st.phase);
+        }
+
+        function startLpTimer() {
+            if (lpTimerInt) return;
+            lpTimerInt = setInterval(() => {
+                if (lpPhase !== 'question') return;
+                updateLpTimerUI(Math.max(0, lpEndsAt - Date.now()));
+            }, 250);
+            updateLpTimerUI(Math.max(0, lpEndsAt - Date.now()));
+        }
+
+        function stopLpTimer() {
+            if (lpTimerInt) { clearInterval(lpTimerInt); lpTimerInt = null; }
+        }
+
+        function updateLpTimerUI(rem) {
+            const sec = Math.ceil(rem / 1000);
+            const t = document.getElementById('lp-timer');
+            t.textContent = sec;
+            t.className = 'font-oswald text-3xl font-bold ' + (sec <= 5 ? 'text-rose-400' : 'text-natgeo-yellow');
+            document.getElementById('lp-timer-bar').style.width = Math.max(0, Math.min(100, rem / Math.max(1, lpTimerTotal * 1000) * 100)) + '%';
+        }
+
+        function paintLp(q, phase) {
+            showLp('lp-question');
+            setT('lp-qnum', `Вопрос ${lpQIdx + 1} из ${lpQuestions.length}`);
+            const img = document.getElementById('lp-img');
+            const src = phase === 'reveal' ? q.fullUrl : q.closeUrl;
+            if (img.dataset.src !== src) { img.dataset.src = src; img.src = src; }
+
+            const canAnswer = phase === 'question' && lpAnswered === null;
+            document.getElementById('lp-options').innerHTML = q.options.map((t, i) => {
+                let cls = 'bg-natgeo-dark/90 border-natgeo-cardBorder text-white';
+                if (phase === 'reveal') {
+                    if (i === q.correct) cls = 'bg-emerald-950/80 border-emerald-500 text-emerald-200';
+                    else if (i === lpAnswered) cls = 'bg-rose-950/80 border-rose-500 text-rose-200';
+                    else cls += ' opacity-40';
+                } else if (i === lpAnswered) {
+                    cls = 'bg-natgeo-yellow/15 border-natgeo-yellow text-white';
+                }
+                return `<button type="button" ${canAnswer ? '' : 'disabled'} onclick="lpChoose(${i})" class="w-full p-4 rounded-xl text-left border ${cls} text-base font-semibold flex items-center gap-3 transition-all ${canAnswer ? 'cursor-pointer active:scale-[0.98]' : ''}">
+                    <span class="w-8 h-8 rounded-full bg-natgeo-card border border-natgeo-cardBorder flex items-center justify-center text-xs text-natgeo-yellow font-bold flex-shrink-0">${LETTERS[i]}</span><span>${escapeHtml(t)}</span></button>`;
+            }).join('');
+
+            let status = '';
+            if (phase === 'question') status = lpAnswered === null ? 'Выберите ответ' : 'Ответ принят! Ждите остальных';
+            else if (phase === 'locked') status = lpAnswered === null ? 'Время вышло — вы не успели ответить' : 'Приём ответов закрыт. Смотрите на экран';
+            else if (phase === 'reveal') status = lpAnswered === null ? 'Вы не ответили' : (lpAnswered === q.correct ? 'Верно!' : 'Неверно');
+            const statusEl = document.getElementById('lp-status');
+            statusEl.textContent = status;
+            statusEl.className = 'text-center text-sm font-semibold ' + (phase === 'reveal' && lpAnswered === q.correct ? 'text-emerald-400' : (phase === 'reveal' && lpAnswered !== null ? 'text-rose-400' : 'text-natgeo-textMuted'));
+
+            const fact = document.getElementById('lp-fact');
+            if (phase === 'reveal') { fact.textContent = 'Это ' + q.name + '. ' + q.fact; fact.classList.remove('hidden'); }
+            else fact.classList.add('hidden');
+
+            setT('lp-score', lpLocalScore(false));
+        }
+
+        function lpChoose(i) {
+            if (lpPhase !== 'question' || lpAnswered !== null || !currentSession) return;
+            lpAnswered = i;
+            lpMyAnswers[lpQIdx] = i;
+            const ms = Date.now() - lpQStart;
+            window.submitAnswer(currentSession.code, lpQIdx, playerId, lpPlayerName, i, ms).catch(e => console.warn('answer:', e));
+            paintLp(lpQuestions[lpQIdx], 'question');
+        }
+
+        function renderLpFinal() {
+            showLp('lp-final');
+            const mine = allLeaderboardResults.filter(r => r.sessionId === currentSession.code).sort(cmpResults);
+            const idx = mine.findIndex(r => r.playerId === playerId);
+            let score = lpLocalScore(true), place = '';
+            if (idx >= 0) { score = mine[idx].score; place = `Ваше место: ${idx + 1} из ${mine.length}`; }
+            setT('lp-final-score', `${score} / ${lpQuestions.length}`);
+            setT('lp-final-place', place);
+            setT('lp-score', score);
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
+            initApp();
             selectCategory('clothes');
         });
     </script>
