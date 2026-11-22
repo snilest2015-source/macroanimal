@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Угадай животное по макросъемке | National Geographic Квиз</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Oswald & Montserrat -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- QRCode.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        natgeo: {
+                            yellow: '#FFCC00',
+                            yellowDark: '#E6B800',
+                            dark: '#0c0c0e',
+                            card: '#16161a',
+                            cardBorder: '#282832',
+                            slate: '#202028',
+                            textMuted: '#9ca3af'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Montserrat', 'sans-serif'],
+                        oswald: ['Oswald', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0c0c0e;
+            color: #f3f4f6;
+            font-family: 'Montserrat', sans-serif;
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(255, 204, 0, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 85% 80%, rgba(255, 204, 0, 0.04) 0%, transparent 40%);
+        }
+
+        .gold-glow {
+            box-shadow: 0 0 25px rgba(255, 204, 0, 0.2);
+        }
+
+        .category-card {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .category-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(255, 204, 0, 0.6);
+        }
+
+        .category-card.selected {
+            border-color: #FFCC00;
+            background: linear-gradient(145deg, #1d1c16 0%, #16161a 100%);
+            box-shadow: 0 0 20px rgba(255, 204, 0, 0.18);
+        }
+
+        .photo-frame {
+            position: relative;
+            overflow: hidden;
+            border: 3px solid #1a1a20;
+        }
+
+        .photo-frame::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            box-shadow: inset 0 0 25px rgba(0,0,0,0.8);
+            pointer-events: none;
+        }
+
+        /* Кастомный скроллбар */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0c0c0e; }
+        ::-webkit-scrollbar-thumb { background: #282832; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #FFCC00; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-natgeo-yellow selection:text-black">
+
+    <!-- Верхняя навигационная панель -->
+    <header class="border-b border-natgeo-cardBorder bg-natgeo-dark/95 backdrop-blur-md sticky top-0 z-50 px-4 py-3 sm:px-8">
+        <div class="max-w-6xl mx-auto flex items-center justify-between gap-2">
+            <!-- Логотип в стиле National Geographic -->
+            <button onclick="goToStartScreen()" class="flex items-center gap-3 text-left group focus:outline-none">
+                <div class="w-6 h-9 border-4 border-natgeo-yellow bg-transparent flex-shrink-0 group-hover:scale-105 transition-transform"></div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-extrabold tracking-wider text-white font-oswald uppercase flex items-center gap-2">
+                        PHOTO ARK <span class="text-xs font-sans px-2 py-0.5 rounded bg-natgeo-yellow text-black font-bold tracking-normal">Квиз</span>
+                    </h1>
+                    <p class="text-xs text-natgeo-textMuted hidden sm:block">Угадай животное по макросъемке</p>
+                </div>
+            </button>
+            
+            <!-- Кнопки управления в шапке -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <button onclick="togglePhotoEditor()" class="px-3 py-1.5 rounded-lg bg-natgeo-card hover:bg-natgeo-slate border border-natgeo-cardBorder text-gray-200 hover:text-natgeo-yellow text-xs font-bold transition-all flex items-center gap-2" title="Заменить фотографии или добавить свои">
+                    <i class="fa-solid fa-images text-natgeo-yellow text-sm"></i>
+                    <span class="hidden md:inline">Мои фото / Редактор</span>
+                </button>
+                <button onclick="toggleHostMode()" class="px-3 py-1.5 rounded-lg bg-natgeo-slate hover:bg-natgeo-yellow hover:text-black border border-natgeo-cardBorder text-natgeo-yellow text-xs font-bold transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-qrcode text-sm"></i>
+                    <span class="hidden sm:inline">Экран ведущего / Рейтинг</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Модальное уведомление (вместо системного alert/confirm) -->
+    <div id="custom-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="bg-natgeo-card border border-natgeo-yellow/50 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-natgeo-yellow/10 border border-natgeo-yellow/30 flex items-center justify-center text-natgeo-yellow">
+                    <i id="modal-icon" class="fa-solid fa-circle-exclamation text-lg"></i>
+                </div>
+                <h3 id="modal-title" class="text-lg font-bold text-white font-oswald uppercase tracking-wide">Подтверждение</h3>
+            </div>
+            <p id="modal-message" class="text-sm text-natgeo-textMuted leading-relaxed"></p>
+            <div id="modal-actions" class="flex justify-end gap-3 pt-2"></div>
+        </div>
+    </div>
+
+    <!-- Основной контейнер -->
+    <main class="max-w-5xl mx-auto w-full px-4 py-6 sm:py-8 flex-grow flex flex-col justify-center">
+
+        <!-- 1. СТАРТОВЫЙ ЭКРАН: ВЫБОР РУБРИКИ И РЕГИСТРАЦИЯ -->
+        <section id="start-screen" class="space-y-8 max-w-4xl mx-auto py-2 sm:py-4 w-full">
+            <div class="text-center space-y-4 max-w-2xl mx-auto">
+                <div class="inline-block p-4 rounded-full bg-natgeo-card border border-natgeo-cardBorder gold-glow">
+                    <i class="fa-solid fa-camera-retro text-3xl sm:text-4xl text-natgeo-yellow"></i>
+                </div>
+                
+                <h1 class="text-3xl sm:text-5xl font-bold text-white font-oswald tracking-wide leading-tight uppercase">
+                    Угадай животное по <span class="text-natgeo-yellow">Макросъемке</span>
+                </h1>
+                
+                <p class="text-natgeo-textMuted text-sm sm:text-base leading-relaxed">
+                    Выберите тематическую рубрику исследования, введите своё имя и проверьте наблюдательность по уникальным кадрам дикой природы!
+                </p>
+            </div>
+
+            <!-- Блок выбора рубрик -->
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs uppercase font-bold text-natgeo-yellow tracking-widest font-oswald flex items-center gap-2">
+                        <i class="fa-solid fa-layer-group"></i> Шаг 1. Выберите рубрику игры
+                    </span>
+                    <span id="selected-category-count" class="text-xs text-natgeo-textMuted font-semibold">5 вопросов</span>
+                </div>
+
+                <!-- Сетка из 4 тематических рубрик -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5" id="category-cards-grid">
+                    <!-- Рубрика 1: Узнай, чья одежда -->
+                    <button type="button" onclick="selectCategory('clothes')" data-category="clothes"
+                        class="category-card selected text-left bg-natgeo-card border border-natgeo-cardBorder rounded-2xl p-4 flex flex-col justify-between gap-4 relative overflow-hidden group cursor-pointer">
+                        <div class="flex items-start justify-between">
+                            <div class="w-11 h-11 rounded-xl bg-natgeo-slate border border-natgeo-cardBorder group-hover:border-natgeo-yellow/50 flex items-center justify-center text-natgeo-yellow text-xl">
+                                <i class="fa-solid fa-feather-pointed"></i>
+                            </div>
+                            <span class="check-badge text-natgeo-yellow text-base">
+                                <i class="fa-solid fa-circle-check"></i>
+                            </span>
+                        </div>
+                        <div>
+                            <div class="text-[11px] uppercase tracking-wider text-natgeo-yellow font-bold mb-1">Рубрика 01</div>
+                            <h3 class="text-lg font-bold text-white font-oswald uppercase tracking-wide leading-snug">
+                                Узнай, чья одежда
+                            </h3>
+                            <p class="text-xs text-natgeo-textMuted mt-1.5 leading-relaxed">
+                                Шерсть, перья, чешуя и неповторимые природные узоры
+                            </p>
+                        </div>
+                    </button>
+
+                    <!-- Рубрика 2: Узнай, чей глаз -->
+                    <button type="button" onclick="selectCategory('eyes')" data-category="eyes"
+                        class="category-card text-left bg-natgeo-card border border-natgeo-cardBorder rounded-2xl p-4 flex flex-col justify-between gap-4 relative overflow-hidden group cursor-pointer">
+                        <div class="flex items-start justify-between">
+                            <div class="w-11 h-11 rounded-xl bg-natgeo-slate border border-natgeo-cardBorder group-hover:border-natgeo-yellow/50 flex items-center justify-center text-natgeo-yellow text-xl">
+                                <i class="fa-solid fa-eye"></i>
+                            </div>
+                            <span class="check-badge text-natgeo-yellow text-base hidden">
+                                <i class="fa-solid fa-circle-check"></i>
+                            </span>
+                        </div>
+                        <div>
+                            <div class="text-[11px] uppercase tracking-wider text-natgeo-yellow font-bold mb-1">Рубрика 02</div>
+                            <h3 class="text-lg font-bold text-white font-oswald uppercase tracking-wide leading-snug">
+                                Узнай, чей глаз
+                            </h3>
+                            <p class="text-xs text-natgeo-textMuted mt-1.5 leading-relaxed">
+                                Макросъемка зрачков и радужки обитателей планеты
+                            </p>
+                        </div>
+                    </button>
+
+                    <!-- Рубрика 3: Узнай, чья лапа -->
+                    <button type="button" onclick="selectCategory('paws')" data-category="paws"
+                        class="category-card text-left bg-natgeo-card border border-natgeo-cardBorder rounded-2xl p-4 flex flex-col justify-between gap-4 relative overflow-hidden group cursor-pointer">
+                        <div class="flex items-start justify-between">
+                            <div class="w-11 h-11 rounded-xl bg-natgeo-slate border border-natgeo-cardBorder group-hover:border-natgeo-yellow/50 flex items-center justify-center text-natgeo-yellow text-xl">
+                                <i class="fa-solid fa-paw"></i>
+                            </div>
+                            <span class="check-badge text-natgeo-yellow text-base hidden">
+                                <i class="fa-solid fa-circle-check"></i>
+                            </span>
+                        </div>
+                        <div>
+                            <div class="text-[11px] uppercase tracking-wider text-natgeo-yellow font-bold mb-1">Рубрика 03</div>
+                            <h3 class="text-lg font-bold text-white font-oswald uppercase tracking-wide leading-snug">
+                                Узнай, чья лапа
+                            </h3>
+                            <p class="text-xs text-natgeo-textMuted mt-1.5 leading-relaxed">
+                                Когти, подушечки лап, копыта, ласты и следы зверей
+                            </p>
+                        </div>
+                    </button>
+
+                    <!-- Рубрика 4: Узнай, чей зуб -->
+                    <button type="button" onclick="selectCategory('teeth')" data-category="teeth"
+                        class="category-card text-left bg-natgeo-card border border-natgeo-cardBorder rounded-2xl p-4 flex flex-col justify-between gap-4 relative overflow-hidden group cursor-pointer">
+                        <div class="flex items-start justify-between">
+                            <div class="w-11 h-11 rounded-xl bg-natgeo-slate border border-natgeo-cardBorder group-hover:border-natgeo-yellow/50 flex items-center justify-center text-natgeo-yellow text-xl">
+                                <i class="fa-solid fa-tooth"></i>
+                            </div>
+                            <span class="check-badge text-natgeo-yellow text-base hidden">
+                                <i class="fa-solid fa-circle-check"></i>
+                            </span>
+                        </div>
+                        <div>
+                            <div class="text-[11px] uppercase tracking-wider text-natgeo-yellow font-bold mb-1">Рубрика 04</div>
+                            <h3 class="text-lg font-bold text-white font-oswald uppercase tracking-wide leading-snug">
+                                Узнай, чей зуб
+                            </h3>
+                            <p class="text-xs text-natgeo-textMuted mt-1.5 leading-relaxed">
+                                Клыки хищников, резцы грызунов, бивни и челюсти
+                            </p>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- Кнопка общего микс-режима -->
+                <button type="button" onclick="selectCategory('mix')" data-category="mix"
+                    class="category-card w-full text-left bg-natgeo-card border border-natgeo-cardBorder rounded-2xl p-4 flex items-center justify-between gap-4 group cursor-pointer">
+                    <div class="flex items-center gap-4">
+                        <div class="w-11 h-11 rounded-xl bg-natgeo-yellow/10 border border-natgeo-yellow/30 flex items-center justify-center text-natgeo-yellow text-lg flex-shrink-0">
+                            <i class="fa-solid fa-shuffle"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-base sm:text-lg font-bold text-white font-oswald uppercase tracking-wide">
+                                    Все рубрики (Большой Микс)
+                                </h3>
+                                <span class="text-[10px] px-2 py-0.5 rounded bg-natgeo-yellow/20 text-natgeo-yellow font-bold uppercase">10 вопросов</span>
+                            </div>
+                            <p class="text-xs text-natgeo-textMuted">Случайная подборка из всех четырёх рубрик: одежда, глаза, лапы и зубы</p>
+                        </div>
+                    </div>
+                    <span class="check-badge text-natgeo-yellow text-lg hidden flex-shrink-0">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </span>
+                </button>
+            </div>
+
+            <!-- Форма ввода имени игрока -->
+            <form id="register-form" onsubmit="event.preventDefault(); startQuiz();" class="bg-natgeo-card border border-natgeo-cardBorder rounded-2xl p-5 sm:p-6 max-w-xl mx-auto space-y-4 shadow-xl">
+                <div>
+                    <label for="player-name" class="block text-xs uppercase font-bold text-natgeo-yellow mb-2 tracking-wider">
+                        Шаг 2. Ваше Имя / Никнейм для таблицы лидеров
+                    </label>
+                    <div class="relative">
+                        <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-natgeo-textMuted"></i>
+                        <input type="text" id="player-name" required placeholder="Например: Александр" 
+                            class="w-full pl-11 pr-4 py-3.5 bg-natgeo-dark border border-natgeo-cardBorder rounded-xl text-white placeholder-natgeo-textMuted focus:outline-none focus:border-natgeo-yellow text-sm font-semibold transition-all">
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-4 bg-natgeo-yellow hover:bg-natgeo-yellowDark text-black font-extrabold text-base rounded-xl shadow-lg transition-all flex items-center justify-center gap-3 cursor-pointer">
+                    <span id="start-btn-label">НАЧАТЬ ТЕСТ: УЗНАЙ, ЧЬЯ ОДЕЖДА</span>
+                    <i class="fa-solid fa-play"></i>
+                </button>
+            </form>
+        </section>
+
+        <!-- 2. ЭКРАН ИГРОВОГО ПРОЦЕССА (КВИЗ) -->
+        <section id="quiz-screen" class="hidden space-y-5 max-w-4xl mx-auto w-full">
+            <!-- Верхняя панель прогресса и текущей рубрики -->
+            <div class="space-y-2.5">
+                <div class="flex flex-wrap justify-between items-center gap-2 text-xs sm:text-sm font-semibold">
+                    <div class="flex items-center gap-2.5">
+                        <span class="px-2.5 py-1 rounded-md bg-natgeo-yellow text-black font-extrabold text-xs uppercase font-oswald tracking-wider" id="active-category-badge">
+                            Узнай, чья одежда
+                        </span>
+                        <span class="text-natgeo-yellow uppercase tracking-widest text-xs font-oswald">
+                            Вопрос <span id="current-q-num">1</span> из <span id="total-q-num">5</span>
+                        </span>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <span class="px-3 py-1 rounded-full bg-natgeo-card border border-natgeo-cardBorder text-natgeo-yellow text-xs font-bold">
+                            Очки: <span id="live-score">0</span>
+                        </span>
+                        <span id="player-badge" class="px-3 py-1 rounded-full bg-natgeo-card border border-natgeo-cardBorder text-white text-xs font-bold flex items-center gap-2">
+                            <i class="fa-solid fa-user text-natgeo-yellow"></i>
+                            <span id="display-player-name">Игрок</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="w-full h-2 bg-natgeo-card rounded-full overflow-hidden border border-natgeo-cardBorder">
+                    <div id="progress-bar" class="h-full bg-natgeo-yellow transition-all duration-300 w-0"></div>
+                </div>
+            </div>
+
+            <!-- Основная карточка вопроса -->
+            <div class="bg-natgeo-card border border-natgeo-cardBorder rounded-2xl p-4 sm:p-6 shadow-2xl relative">
+                <!-- Область фотографии -->
+                <div class="relative w-full h-64 sm:h-96 rounded-xl overflow-hidden bg-black photo-frame mb-6 flex items-center justify-center">
+                    <img id="animal-img" src="" alt="Макросъемка животного" 
+                        onerror="handleImageFallback(this)"
+                        class="w-full h-full object-cover transition-all duration-700 ease-out">
+                    
+                    <!-- Бейдж режима съемки -->
+                    <div id="zoom-tag" class="absolute top-3 left-3 bg-black/85 backdrop-blur-md px-3 py-1.5 rounded-md border border-white/15 text-xs text-natgeo-yellow font-semibold flex items-center gap-2">
+                        <i id="zoom-icon" class="fa-solid fa-magnifying-glass-plus animate-pulse"></i>
+                        <span id="zoom-status">МАКРО КРУПНЫЙ ПЛАН</span>
+                    </div>
+
+                    <!-- Кнопка подсказки 50/50 -->
+                    <button id="hint-btn" onclick="useHint()" class="absolute top-3 right-3 bg-natgeo-dark/90 hover:bg-natgeo-yellow hover:text-black border border-natgeo-cardBorder text-natgeo-yellow px-3 py-1.5 rounded-md text-xs font-semibold backdrop-blur-md transition-all flex items-center gap-1.5 shadow-md cursor-pointer">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>Подсказка 50/50</span>
+                    </button>
+                </div>
+
+                <!-- Текст вопроса рубрики -->
+                <h2 id="question-prompt" class="text-lg sm:text-xl font-bold text-white mb-4 font-oswald tracking-wide">
+                    Чья это одежда? Определите животное по фрагменту:
+                </h2>
+
+                <!-- Сетка вариантов ответа -->
+                <div id="options-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4"></div>
+
+                <!-- Карточка с научным фактом после ответа -->
+                <div id="fact-card" class="hidden mt-6 p-4 sm:p-5 rounded-xl bg-natgeo-slate border border-natgeo-cardBorder">
+                    <div class="flex items-start gap-3">
+                        <div class="p-2.5 bg-natgeo-yellow/10 rounded-lg text-natgeo-yellow flex-shrink-0 mt-0.5">
+                            <i class="fa-solid fa-circle-info text-xl"></i>
+                        </div>
+                        <div class="space-y-1">
+                            <h4 id="fact-title" class="font-bold text-white text-sm sm:text-base font-oswald"></h4>
+                            <p id="fact-text" class="text-xs sm:text-sm text-natgeo-textMuted leading-relaxed"></p>
+                        </div>
+                    </div>
+                    <button id="next-btn" onclick="nextQuestion()" class="mt-4 w-full py-3.5 bg-natgeo-yellow hover:bg-natgeo-yellowDark text-black font-extrabold text-sm rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer">
+                        <span id="next-btn-text">СЛЕДУЮЩИЙ ВОПРОС</span>
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. ЭКРАН РЕЗУЛЬТАТОВ ИГРОКА -->
+        <section id="results-screen" class="hidden space-y-6 max-w-2xl mx-auto py-6 w-full">
+            <div class="text-center space-y-3">
+                <div class="inline-block p-4 rounded-full bg-natgeo-card border border-natgeo-cardBorder gold-glow">
+                    <i class="fa-solid fa-trophy text-5xl text-natgeo-yellow"></i>
+                </div>
+                <div class="inline-block px-3 py-1 rounded-full bg-natgeo-yellow/15 border border-natgeo-yellow/40 text-natgeo-yellow text-xs font-bold uppercase tracking-wider" id="result-category-badge">
+                    Узнай, чья одежда
+                </div>
+                <h2 class="text-3xl sm:text-4xl font-bold text-white font-oswald uppercase">Тест завершен!</h2>
+                <p class="text-natgeo-textMuted text-sm">Ваш результат успешно записан в общую таблицу лидеров.</p>
+            </div>
+
+            <div class="bg-natgeo-card border border-natgeo-cardBorder rounded-2xl p-6 text-center space-y-4">
+                <div>
+                    <div id="final-score" class="text-5xl font-extrabold text-natgeo-yellow font-oswald">0 / 5</div>
+                    <div class="text-xs uppercase tracking-widest text-natgeo-textMuted mt-1">Правильных ответов</div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <div class="p-3 bg-natgeo-slate rounded-xl border border-natgeo-cardBorder">
+                        <div class="text-xs text-natgeo-textMuted">Время прохождения</div>
+                        <div id="final-time" class="text-base font-bold text-white mt-0.5">00:00</div>
+                    </div>
+                    <div class="p-3 bg-natgeo-slate rounded-xl border border-natgeo-cardBorder">
+                        <div class="text-xs text-natgeo-textMuted">Игрок</div>
+                        <div id="final-player-name" class="text-base font-bold text-white mt-0.5 truncate">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button onclick="restartQuiz()" class="flex-1 py-3.5 bg-natgeo-yellow hover:bg-natgeo-yellowDark text-black font-bold text-sm rounded-xl transition-all cursor-pointer">
+                    Выбрать другую рубрику / Сыграть снова
+                </button>
+                <button onclick="toggleHostMode()" class="flex-1 py-3.5 bg-natgeo-slate hover:bg-natgeo-cardBorder text-white font-bold text-sm rounded-xl border border-natgeo-cardBorder transition-all flex items-center justify-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-list-ol text-natgeo-yellow"></i>
+                    <span>Посмотреть общий рейтинг</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- 4. ЭКРАН ВЕДУЩЕГО / ТАБЛИЦА ЛИДЕРОВ И QR-КОД -->
+        <section id="host-screen" class="hidden space-y-6 w-full">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-natgeo-cardBorder pb-4">
+                <div>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-white font-oswald uppercase flex flex-wrap items-center gap-3">
+                        <span>Таблица лидеров & QR-Код</span>
+                        <span class="text-xs font-sans px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-semibold">Обновление онлайн</span>
+                    </h2>
+                    <p class="text-xs text-natgeo-textMuted mt-1">Экран ведущего для трансляции результатов и подключения участников</p>
+                </div>
+                
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="exportToCSV()" class="px-3 py-2 bg-natgeo-slate hover:bg-natgeo-cardBorder border border-natgeo-cardBorder text-xs text-white rounded-lg font-bold transition-all flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-file-csv text-natgeo-yellow"></i>
+                        <span>Экспорт CSV</span>
+                    </button>
+                    <button onclick="confirmClearLeaderboard()" class="px-3 py-2 bg-rose-950/60 hover:bg-rose-900 border border-rose-800 text-xs text-rose-200 rounded-lg font-bold transition-all flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-trash"></i>
+                        <span>Сбросить данные</span>
+                    </button>
+                    <button onclick="closeHostMode()" class="px-3 py-2 bg-natgeo-yellow hover:bg-natgeo-yellowDark text-black text-xs font-bold rounded-lg transition-all cursor-pointer">
+                        Вернуться к квизу
+                    </button>
+                </div>
+            </div>
+
+            <!-- Верхняя сетка: QR-код + Карточка лидера -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Карточка с QR-кодом -->
+                <div class="bg-natgeo-card border border-natgeo-cardBorder rounded-2xl p-6 text-center flex flex-col items-center justify-center space-y-3">
+                    <h3 class="text-sm font-bold text-natgeo-yellow uppercase tracking-wider font-oswald">Отсканируйте для участия</h3>
+                    
+                    <div id="qrcode-container" class="p-3 bg-white rounded-xl shadow-lg border border-gray-200"></div>
+
+                    <p class="text-xs text-natgeo-textMuted">Наведите камеру телефона, чтобы выбрать рубрику, ввести имя и начать тест</p>
+                </div>
+
+                <!-- Баннер текущего победителя -->
+                <div id="winner-card" class="md:col-span-2 bg-gradient-to-r from-natgeo-card via-natgeo-slate to-natgeo-card border border-natgeo-yellow/40 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6 gold-glow relative overflow-hidden">
+                    <div class="space-y-2 text-center sm:text-left z-10">
+                        <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-natgeo-yellow/20 border border-natgeo-yellow/40 text-natgeo-yellow text-xs font-bold uppercase">
+                            <i class="fa-solid fa-crown"></i> Текущий Победитель
+                        </span>
+                        <h4 id="winner-name" class="text-3xl font-extrabold text-white font-oswald">Ожидание игроков...</h4>
+                        <p id="winner-category-label" class="text-xs font-semibold text-natgeo-yellow"></p>
+                        <p id="winner-stats" class="text-xs text-natgeo-textMuted">Победитель определяется по максимальному количеству очков и минимальному времени.</p>
+                    </div>
+
+                    <div class="text-center sm:text-right z-10 flex-shrink-0">
+                        <div id="winner-score" class="text-5xl font-extrabold text-natgeo-yellow font-oswald">-</div>
+                        <div id="winner-time" class="text-xs text-natgeo-textMuted font-semibold mt-1">--:--</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Фильтр таблицы лидеров по рубрикам -->
+            <div class="bg-natgeo-card border border-natgeo-cardBorder rounded-2xl overflow-hidden shadow-xl">
+                <div class="px-6 py-4 border-b border-natgeo-cardBorder flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <h3 class="font-bold text-white text-base font-oswald uppercase tracking-wider">
+                        Все участники (<span id="total-players-count">0</span>)
+                    </h3>
+
+                    <div class="flex flex-wrap gap-1.5" id="leaderboard-filters">
+                        <button onclick="setLeaderboardFilter('all')" data-filter="all" class="lb-filter-btn px-2.5 py-1 rounded-md text-xs font-bold bg-natgeo-yellow text-black transition-all">Все</button>
+                        <button onclick="setLeaderboardFilter('clothes')" data-filter="clothes" class="lb-filter-btn px-2.5 py-1 rounded-md text-xs font-bold bg-natgeo-slate text-natgeo-textMuted hover:text-white transition-all">Одежда</button>
+                        <button onclick="setLeaderboardFilter('eyes')" data-filter="eyes" class="lb-filter-btn px-2.5 py-1 rounded-md text-xs font-bold bg-natgeo-slate text-natgeo-textMuted hover:text-white transition-all">Глаза</button>
+                        <button onclick="setLeaderboardFilter('paws')" data-filter="paws" class="lb-filter-btn px-2.5 py-1 rounded-md text-xs font-bold bg-natgeo-slate text-natgeo-textMuted hover:text-white transition-all">Лапы</button>
+                        <button onclick="setLeaderboardFilter('teeth')" data-filter="teeth" class="lb-filter-btn px-2.5 py-1 rounded-md text-xs font-bold bg-natgeo-slate text-natgeo-textMuted hover:text-white transition-all">Зубы</button>
+                        <button onclick="setLeaderboardFilter('mix')" data-filter="mix" class="lb-filter-btn px-2.5 py-1 rounded-md text-xs font-bold bg-natgeo-slate text-natgeo-textMuted hover:text-white transition-all">Микс</button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-natgeo-slate text-xs uppercase text-natgeo-textMuted font-semibold">
+                            <tr>
+                                <th class="py-3.5 px-4 text-center w-16">Место</th>
+                                <th class="py-3.5 px-4">Имя участника</th>
+                                <th class="py-3.5 px-4">Рубрика</th>
+                                <th class="py-3.5 px-4 text-center">Очки</th>
+                                <th class="py-3.5 px-4 text-center">Время</th>
+                                <th class="py-3.5 px-4 text-right">Дата и время</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-body" class="divide-y divide-natgeo-cardBorder text-white">
+                            <!-- Динамические строки -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. ВСТРОЕННЫЙ РЕДАКТОР КАРТИНОК (ДЛЯ БЫСТРОЙ ПОДСТАНОВКИ СВОИХ ФОТО БЕЗ ПРАВКИ КОДА) -->
+        <section id="editor-screen" class="hidden space-y-6 w-full">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-natgeo-cardBorder pb-4">
+                <div>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-white font-oswald uppercase flex items-center gap-3">
+                        <i class="fa-solid fa-images text-natgeo-yellow"></i>
+                        <span>Редактор фотографий по рубрикам</span>
+                    </h2>
+                    <p class="text-xs text-natgeo-textMuted mt-1">
+                        Вы можете вставить ссылки на свои картинки или загрузить файлы с компьютера прямо здесь, а также отредактировать массив <code class="text-natgeo-yellow">quizCategories</code> в коде.
+                    </p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="resetCustomImages()" class="px-3 py-2 bg-rose-950/60 hover:bg-rose-900 border border-rose-800 text-xs text-rose-200 rounded-lg font-bold transition-all cursor-pointer">
+                        Сбросить на стандартные
+                    </button>
+                    <button onclick="closePhotoEditor()" class="px-4 py-2 bg-natgeo-yellow hover:bg-natgeo-yellowDark text-black text-xs font-extrabold rounded-lg transition-all cursor-pointer">
+                        Готово и вернуться
+                    </button>
+                </div>
+            </div>
+
+            <!-- Вкладки рубрик в редакторе -->
+            <div class="flex flex-wrap gap-2" id="editor-tabs">
+                <button onclick="renderEditorCategory('clothes')" data-ed-cat="clothes" class="ed-tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-natgeo-yellow text-black">Узнай, чья одежда</button>
+                <button onclick="renderEditorCategory('eyes')" data-ed-cat="eyes" class="ed-tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-natgeo-card border border-natgeo-cardBorder text-white">Узнай, чей глаз</button>
+                <button onclick="renderEditorCategory('paws')" data-ed-cat="paws" class="ed-tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-natgeo-card border border-natgeo-cardBorder text-white">Узнай, чья лапа</button>
+                <button onclick="renderEditorCategory('teeth')" data-ed-cat="teeth" class="ed-tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-natgeo-card border border-natgeo-cardBorder text-white">Узнай, чей зуб</button>
+            </div>
+
+            <div id="editor-questions-list" class="space-y-4"></div>
+        </section>
+
+    </main>
+
+    <!-- Подвал -->
+    <footer class="border-t border-natgeo-cardBorder py-4 text-center text-xs text-natgeo-textMuted mt-8">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <p>National Geographic Photo Ark — Интерактивный квиз</p>
+            <p class="text-natgeo-textMuted/70">Рубрики: Одежда • Глаза • Лапы • Зубы</p>
+        </div>
+    </footer>
+
+    <!-- Скрипт синхронизации (Firebase + автономный режим в памяти/браузере) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'natgeo-close-up-quiz-ru';
+        const hasFirebaseConfig = typeof __firebase_config !== 'undefined' && __firebase_config;
+
+        let currentUser = null;
+        let db = null;
+        let resultsCollectionRef = null;
+
+        // Локальное хранилище текущей сессии (на случай запуска файла локально без сервера)
+        window.sessionLeaderboardResults = [];
+
+        async function initStorage() {
+            if (!hasFirebaseConfig) {
+                window.updateLeaderboardData(window.sessionLeaderboardResults);
+                return;
+            }
+
+            try {
+                const firebaseConfig = JSON.parse(__firebase_config);
+                const app = initializeApp(firebaseConfig);
+                const auth = getAuth(app);
+                db = getFirestore(app);
+                resultsCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'quiz_results_ru');
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    const credentials = await signInWithCustomToken(auth, __initial_auth_token);
+                    currentUser = credentials.user;
+                } else {
+                    const credentials = await signInAnonymously(auth);
+                    currentUser = credentials.user;
+                }
+
+                onSnapshot(resultsCollectionRef, (snapshot) => {
+                    const results = [];
+                    snapshot.forEach((docSnap) => {
+                        results.push({ id: docSnap.id, ...docSnap.data() });
+                    });
+                    window.updateLeaderboardData(results);
+                }, (error) => {
+                    console.error("Ошибка чтения таблицы лидеров:", error);
+                    window.updateLeaderboardData(window.sessionLeaderboardResults);
+                });
+            } catch (err) {
+                console.warn("Работа в автономном режиме:", err);
+                window.updateLeaderboardData(window.sessionLeaderboardResults);
+            }
+        }
+
+        window.savePlayerResult = async function(playerName, score, totalQuestions, timeSeconds, categoryKey, categoryTitle) {
+            const entry = {
+                playerName: playerName,
+                score: score,
+                totalQuestions: totalQuestions,
+                timeSeconds: timeSeconds,
+                categoryKey: categoryKey,
+                categoryTitle: categoryTitle,
+                timestamp: Date.now(),
+                dateString: new Date().toLocaleString('ru-RU', {
+                    day: '2-digit', month: '2-digit', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                })
+            };
+
+            // Добавляем в память текущей сессии
+            window.sessionLeaderboardResults.push(entry);
+            window.updateLeaderboardData(window.sessionLeaderboardResults);
+
+            // Если подключено облако — сохраняем и туда
+            if (currentUser && resultsCollectionRef) {
+                try {
+                    await addDoc(resultsCollectionRef, entry);
+                } catch (err) {
+                    console.error("Ошибка сохранения результата:", err);
+                }
+            }
+        };
+
+        window.clearLeaderboard = async function() {
+            window.sessionLeaderboardResults = [];
+            window.updateLeaderboardData([]);
+
+            if (currentUser && resultsCollectionRef && db) {
+                try {
+                    const snapshot = await getDocs(resultsCollectionRef);
+                    const deletePromises = snapshot.docs.map(d => deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'quiz_results_ru', d.id)));
+                    await Promise.all(deletePromises);
+                } catch (err) {
+                    console.error("Ошибка очистки данных:", err);
+                }
+            }
+        };
+
+        initStorage();
+    </script>
+
+    <!-- Данные квиза по 4 рубрикам и вся игровая логика -->
+    <script>
+        /**
+         * ============================================================================
+         * ДАННЫЕ КВИЗА ПО 4 РУБРИКАМ (quizCategories)
+         * Инструкция: Чтобы вставить свои картинки, просто замените ссылки в полях
+         * `closeUrl` (макро-кадр до ответа) и `fullUrl` (полный кадр после ответа).
+         * Поддерживаются как ссылки (https://...), так и относительные пути (images/1.jpg).
+         * ============================================================================
+         */
+        const quizCategories = {
+            // 1. РУБРИКА: УЗНАЙ, ЧЬЯ ОДЕЖДА
+            clothes: {
+                key: "clothes",
+                title: "Узнай, чья одежда",
+                shortTitle: "Чья одежда",
+                icon: "fa-feather-pointed",
+                prompt: "Чья это «одежда»? Определите животное по текстуре шерсти, перьев или чешуи:",
+                questions: [
+                    {
+                        name: "Бенгальский тигр",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
+                        closeUrl: "https://images.unsplash.com/photo-1534188753412-3e26d0d618d6?q=80&w=800&auto=format&fit=crop",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
+                        fullUrl: "https://images.unsplash.com/photo-1561731216-c3a4d99437d5?q=80&w=1000&auto=format&fit=crop",
+                        options: ["Бенгальский тигр", "Зебра", "Гепард", "Ягуар"],
+                        correct: 0,
+                        fact: "Узор из полос тигра уникален, как отпечатки пальцев человека! Рисунок полос находится не только на шерсти, но и на самой коже тигра."
+                    },
+                    {
+                        name: "Павлин",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
+                        closeUrl: "https://images.unsplash.com/photo-1522850403397-b0c8f2f75451?q=80&w=800&auto=format&fit=crop",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
+                        fullUrl: "https://images.unsplash.com/photo-1536514072410-5019a3c69182?q=80&w=1000&auto=format&fit=crop",
+                        options: ["Попугай Ара", "Колибри", "Павлин", "Кетцаль"],
+                        correct: 2,
+                        fact: "Яркий синий и зеленый цвет перьев павлина создан микроскопическими кристаллическими структурами, преломляющими свет, а не пигментом."
+                    },
+                    {
+                        name: "Зебра",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
+                        closeUrl: "https://images.unsplash.com/photo-1501706362039-c06b2d715385?q=80&w=800&auto=format&fit=crop",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
+                        fullUrl: "https://images.unsplash.com/photo-1526095179574-86e545848d30?q=80&w=1000&auto=format&fit=crop",
+                        options: ["Зебра", "Окапи", "Тигр", "Кошачий лемур"],
+                        correct: 0,
+                        fact: "Ученые выяснили, что полосы зебры сбивают с толку слепней и кусающих мух, препятствуя их посадке на тело животного."
+                    },
+                    {
+                        name: "Леопард",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
+                        closeUrl: "https://images.unsplash.com/photo-1534567153574-2b12153a87f0?q=80&w=800&auto=format&fit=crop",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
+                        fullUrl: "https://images.unsplash.com/photo-1456926631375-92c8ce872def?q=80&w=1000&auto=format&fit=crop",
+                        options: ["Гепард", "Леопард", "Оцелот", "Сервал"],
+                        correct: 1,
+                        fact: "В отличие от гепарда с простыми точечными пятнами, леопарды обладают рисунком в виде розетковидных колец."
+                    },
+                    {
+                        name: "Жираф",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
+                        closeUrl: "https://images.unsplash.com/photo-1547721064-da6cfb341d50?q=80&w=800&auto=format&fit=crop",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
+                        fullUrl: "https://images.unsplash.com/photo-1547721064-da6cfb341d50?q=80&w=1000&auto=format&fit=crop",
+                        options: ["Жираф", "Питон", "Гиеновидная собака", "Гепард"],
+                        correct: 0,
+                        fact: "Под каждым темным пятном на коже жирафа расположена сложная сеть кровеносных сосудов, работающих как природный теплоотвод."
+                    }
+                ]
+            },
+
+            // 2. РУБРИКА: УЗНАЙ, ЧЕЙ ГЛАЗ
+            eyes: {
+                key: "eyes",
+                title: "Узнай, чей глаз",
+                shortTitle: "Чей глаз",
+                icon: "fa-eye",
+                prompt: "Чей это взгляд? Определите животное по макросъемке глаза:",
+                questions: [
+                    {
+                        name: "Хамелеон",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
+                        closeUrl: "https://images.unsplash.com/photo-1504450758481-7338eba7524a?q=80&w=800&auto=format&fit=crop",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
+                        fullUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1000&auto=format&fit=crop",
+                        options: ["Зеленая игуана", "Хамелеон", "Комодский варан", "Геккон"],
+                        correct: 1,
+                        fact: "Глаза хамелеона вращаются независимо друг от друга на 180 градусов, обеспечивая обзор почти на 360 градусов без поворота головы."
+                    },
+                    {
+                        name: "Красноглазая квакша",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
+                        closeUrl: "https://images.unsplash.com/photo-1550147760-44c9966d6bc7?q=80&w=800&auto=format&fit=crop",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
+                        fullUrl: "https://images.unsplash.com/photo-1602491453631-e2a5ad90a131?q=80&w=1000&auto=format&fit=crop",
+                        options: ["Древолаз", "Красноглазая квакша", "Жаба-ага", "Тритон"],
+                        correct: 1,
+                        fact: "Огромные алые глаза квакши служат для защиты: когда лягушка спит, она закрывает их зелеными веками, а при опасности резко открывает, сбивая хищника с толку."
+                    },
+                    {
+                        name: "Филин",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
+                        closeUrl: "https://images.unsplash.com/photo-1543549790-8b5f4a028cfb?q=80&w=800&auto=format&fit=crop",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
+                        fullUrl: "https://images.unsplash.com/photo-1543549790-8b5f4a028cfb?q=80&w=1000&auto=format&fit=crop",
+                        options: ["Беркут", "Филин", "Ястреб-тетеревятник", "Кондор"],
+                        correct: 1,
+                        fact: "Глаза совы не шарообразные, а вытянутые, как телескопы. Они неподвижны в глазницах, поэтому сова поворачивает голову на 270 градусов."
+                    },
+                    {
+                        name: "Нильский крокодил",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
+                        closeUrl: "https://images.unsplash.com/photo-1529257414772-1960b7bea4eb?q=80&w=800&auto=format&fit=crop",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
+                        fullUrl: "https://images.unsplash.com/photo-1529257414772-1960b7bea4eb?q=80&w=1000&auto=format&fit=crop",
+                        options: ["Нильский крокодил", "Комодский варан", "Анаконда", "Каймановая черепаха"],
+                        correct: 0,
+                        fact: "У крокодилов есть третье прозрачное веко (мигательная перепонка), которое работает как подводные очки при нырянии."
+                    },
+                    {
+                        name: "Снежный барс (Ирбис)",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
+                        closeUrl: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?q=80&w=800&auto=format&fit=crop",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
+                        fullUrl: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?q=80&w=1000&auto=format&fit=crop",
+                        options: ["Рысь", "Снежный барс (Ирбис)", "Пума", "Манул"],
+                        correct: 1,
+                        fact: "У снежных барсов светло-зеленые или серые глаза — это большая редкость среди крупных диких кошек, у которых обычно желтая или золотистая радужка."
+                    }
+                ]
+            },
+
+            // 3. РУБРИКА: УЗНАЙ, ЧЬЯ ЛАПА
+            paws: {
+                key: "paws",
+                title: "Узнай, чья лапа",
+                shortTitle: "Чья лапа",
+                icon: "fa-paw",
+                prompt: "Чья это лапа, конечность или след? Определите владельца:",
+                questions: [
+                    {
+                        name: "Африканский слон",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
+                        closeUrl: "https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?q=80&w=800&auto=format&fit=crop",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
+                        fullUrl: "https://images.unsplash.com/photo-1581852017103-68ac65514cf7?q=80&w=1000&auto=format&fit=crop",
+                        options: ["Белый носорог", "Бегемот", "Африканский слон", "Мамонт"],
+                        correct: 2,
+                        fact: "Внутри стопы слона находится упругая жировая подушка, которая амортизирует вес многотонного гиганта и позволяет ему ходить почти бесшумно."
+                    },
+                    {
+                        name: "Зеленая морская черепаха",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
+                        closeUrl: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=800&auto=format&fit=crop",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
+                        fullUrl: "https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?q=80&w=1000&auto=format&fit=crop",
+                        options: ["Морской котик", "Зеленая морская черепаха", "Пингвин", "Ламантин"],
+                        correct: 1,
+                        fact: "Передние ласты морской черепахи работают как крылья птицы под водой, позволяя ей развивать скорость до 35 км/ч."
+                    },
+                    {
+                        name: "Бурый медведь",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
+                        closeUrl: "https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?q=80&w=800&auto=format&fit=crop",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
+                        fullUrl: "https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?q=80&w=1000&auto=format&fit=crop",
+                        options: ["Росомаха", "Бурый медведь", "Барсук", "Волк"],
+                        correct: 1,
+                        fact: "Когти бурого медведя не втягиваются, как у кошек, и достигают 10 см в длину — ими удобно выкапывать корни и ловить рыбу."
+                    },
+                    {
+                        name: "Белый медведь",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
+                        closeUrl: "https://images.unsplash.com/photo-1589656966895-2f33e7653819?q=80&w=800&auto=format&fit=crop",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
+                        fullUrl: "https://images.unsplash.com/photo-1589656966895-2f33e7653819?q=80&w=1000&auto=format&fit=crop",
+                        options: ["Песец", "Белый медведь", "Снежный волк", "Гренландский тюлень"],
+                        correct: 1,
+                        fact: "Подошвы лап белого медведя покрыты густой шерстью и мелкими бугорками-сосочками, чтобы не скользить по гладкому арктическому льду."
+                    },
+                    {
+                        name: "Фламинго",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
+                        closeUrl: "https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?q=80&w=800&auto=format&fit=crop",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
+                        fullUrl: "https://images.unsplash.com/photo-1539418596647-7928236d9d15?q=80&w=1000&auto=format&fit=crop",
+                        options: ["Цапля", "Журавль", "Фламинго", "Аист"],
+                        correct: 2,
+                        fact: "То, что кажется «коленом» фламинго, сгибающимся назад, на самом деле является его голеностопным суставом."
+                    }
+                ]
+            },
+
+            // 4. РУБРИКА: УЗНАЙ, ЧЕЙ ЗУБ
+            teeth: {
+                key: "teeth",
+                title: "Узнай, чей зуб",
+                shortTitle: "Чей зуб",
+                icon: "fa-tooth",
+                prompt: "Чьи это зубы, клыки или бивни? Определите животное:",
+                questions: [
+                    {
+                        name: "Бегемот (Гиппопотам)",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
+                        closeUrl: "https://images.unsplash.com/photo-1534759846116-5799c33ce22a?q=80&w=800&auto=format&fit=crop",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
+                        fullUrl: "https://images.unsplash.com/photo-1534759846116-5799c33ce22a?q=80&w=1000&auto=format&fit=crop",
+                        options: ["Бегемот (Гиппопотам)", "Бородавочник", "Морж", "Носорог"],
+                        correct: 0,
+                        fact: "Нижние клыки бегемота растут всю жизнь, постоянно самозатачиваются друг о друга и могут достигать 50–70 см в длину."
+                    },
+                    {
+                        name: "Большая белая акула",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
+                        closeUrl: "https://images.unsplash.com/photo-1560275619-4662e36fa65c?q=80&w=800&auto=format&fit=crop",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
+                        fullUrl: "https://images.unsplash.com/photo-1560275619-4662e36fa65c?q=80&w=1000&auto=format&fit=crop",
+                        options: ["Барракуда", "Большая белая акула", "Мурена", "Косатка"],
+                        correct: 1,
+                        fact: "Зубы акулы расположены в несколько рядов по принципу конвейера: при потере переднего зуба на его место за несколько дней выдвигается новый."
+                    },
+                    {
+                        name: "Африканский лев",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
+                        closeUrl: "https://images.unsplash.com/photo-1546182990-dffeafbe841d?q=80&w=800&auto=format&fit=crop",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
+                        fullUrl: "https://images.unsplash.com/photo-1546182990-dffeafbe841d?q=80&w=1000&auto=format&fit=crop",
+                        options: ["Африканский лев", "Пятнистая гиена", "Волк", "Гепард"],
+                        correct: 0,
+                        fact: "У льва 30 зубов, а его клыки достигают 8 см в длину. Вместо пережевывания пищи львы разрезают мясо хищными зубами, как ножницами."
+                    },
+                    {
+                        name: "Морж",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
+                        closeUrl: "https://images.unsplash.com/photo-1568430462989-44163eb1752f?q=80&w=800&auto=format&fit=crop",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
+                        fullUrl: "https://images.unsplash.com/photo-1568430462989-44163eb1752f?q=80&w=1000&auto=format&fit=crop",
+                        options: ["Нарвал", "Морж", "Морской лев", "Бабирусса"],
+                        correct: 1,
+                        fact: "Бивни моржа — это удлиненные верхние клыки весом до 5 кг каждый. Они помогают животному выбираться из воды на лед и пробивать лунки."
+                    },
+                    {
+                        name: "Обыкновенный бобр",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (крупный план)
+                        closeUrl: "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?q=80&w=800&auto=format&fit=crop",
+                        // ЗДЕСЬ МОЖНО ВСТАВИТЬ СВОЮ КАРТИНКУ (полный кадр)
+                        fullUrl: "https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?q=80&w=1000&auto=format&fit=crop",
+                        options: ["Обыкновенный бобр", "Капибара", "Дикобраз", "Нутрия"],
+                        correct: 0,
+                        fact: "Оранжевый цвет резцов бобра объясняется высоким содержанием железа в эмали — это делает зубы сверхпрочными, позволяя легко валить деревья."
+                    }
+                ]
+            }
+        };
+
+        // Глубокая копия стандартных вопросов для возможности сброса в редакторе
+        const defaultQuizCategories = JSON.parse(JSON.stringify(quizCategories));
+
+        // Переменные состояния игры
+        let selectedCategoryKey = "clothes";
+        let activeQuestions = [];
+        let currentQuestionIdx = 0;
+        let score = 0;
+        let answered = false;
+        let hintUsed = false;
+        let playerName = "";
+        let quizStartTime = 0;
+        let qrGenerated = false;
+        let currentLeaderboardFilter = "all";
+        let allLeaderboardResults = [];
+
+        // Элементы DOM
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultsScreen = document.getElementById('results-screen');
+        const hostScreen = document.getElementById('host-screen');
+        const editorScreen = document.getElementById('editor-screen');
+
+        const currentQNumEl = document.getElementById('current-q-num');
+        const totalQNumEl = document.getElementById('total-q-num');
+        const progressBar = document.getElementById('progress-bar');
+        const liveScoreEl = document.getElementById('live-score');
+
+        const animalImg = document.getElementById('animal-img');
+        const zoomStatus = document.getElementById('zoom-status');
+        const zoomIcon = document.getElementById('zoom-icon');
+        const hintBtn = document.getElementById('hint-btn');
+        const optionsContainer = document.getElementById('options-container');
+
+        const factCard = document.getElementById('fact-card');
+        const factTitle = document.getElementById('fact-title');
+        const factText = document.getElementById('fact-text');
+
+        // Безопасная заглушка, если пользователь ввел некорректный URL картинки
+        function handleImageFallback(imgEl) {
+            imgEl.onerror = null;
+            imgEl.src = "https://placehold.co/800x500/16161a/FFCC00?text=%D0%92%D1%81%D1%82%D0%B0%D0%B2%D1%8C%D1%82%D0%B5+%D1%81%D0%B2%D0%BE%D0%B5+%D1%84%D0%BE%D1%82%D0%BE+%D0%B2+%D1%80%D0%B5%D0%B4%D0%B0%D0%BA%D1%82%D0%BE%D1%80%D0%B5";
+        }
+
+        // Кастомное модальное окно вместо alert() и confirm()
+        function showCustomModal({ title, message, icon = "fa-circle-info", confirmText = "ОК", cancelText = null, onConfirm = null }) {
+            const modal = document.getElementById('custom-modal');
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-message').textContent = message;
+            document.getElementById('modal-icon').className = `fa-solid ${icon} text-lg`;
+
+            const actions = document.getElementById('modal-actions');
+            actions.innerHTML = '';
+
+            if (cancelText) {
+                const cancelBtn = document.createElement('button');
+                cancelBtn.className = "px-4 py-2 rounded-lg bg-natgeo-slate hover:bg-natgeo-cardBorder text-white text-xs font-bold transition-all cursor-pointer";
+                cancelBtn.textContent = cancelText;
+                cancelBtn.onclick = () => modal.classList.add('hidden');
+                actions.appendChild(cancelBtn);
+            }
+
+            const okBtn = document.createElement('button');
+            okBtn.className = "px-4 py-2 rounded-lg bg-natgeo-yellow hover:bg-natgeo-yellowDark text-black text-xs font-extrabold transition-all cursor-pointer";
+            okBtn.textContent = confirmText;
+            okBtn.onclick = () => {
+                modal.classList.add('hidden');
+                if (onConfirm) onConfirm();
+            };
+            actions.appendChild(okBtn);
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        // Выбор рубрики на стартовом экране
+        function selectCategory(catKey) {
+            selectedCategoryKey = catKey;
+
+            document.querySelectorAll('.category-card').forEach(card => {
+                const isMatch = card.dataset.category === catKey;
+                card.classList.toggle('selected', isMatch);
+                const badge = card.querySelector('.check-badge');
+                if (badge) {
+                    badge.classList.toggle('hidden', !isMatch);
+                }
+            });
+
+            const startBtnLabel = document.getElementById('start-btn-label');
+            const countLabel = document.getElementById('selected-category-count');
+
+            if (catKey === 'mix') {
+                startBtnLabel.textContent = "НАЧАТЬ ТЕСТ: ВСЕ РУБРИКИ (МИКС)";
+                countLabel.textContent = "10 вопросов";
+            } else {
+                const cat = quizCategories[catKey];
+                startBtnLabel.textContent = `НАЧАТЬ ТЕСТ: ${cat.title.toUpperCase()}`;
+                countLabel.textContent = `${cat.questions.length} вопросов`;
+            }
+        }
+
+        // Сбор списка вопросов для выбранной рубрики
+        function buildQuestionsForCategory(catKey) {
+            if (catKey !== 'mix') {
+                const cat = quizCategories[catKey];
+                return cat.questions.map(q => ({
+                    ...q,
+                    categoryTitle: cat.title,
+                    prompt: cat.prompt
+                }));
+            }
+
+            // Для режима "Все рубрики (Микс)" берем по 2-3 вопроса из каждой рубрики
+            const mixed = [];
+            const keys = ['clothes', 'eyes', 'paws', 'teeth'];
+            keys.forEach((k, idx) => {
+                const cat = quizCategories[k];
+                const takeCount = idx < 2 ? 3 : 2; // 3 + 3 + 2 + 2 = 10 вопросов
+                cat.questions.slice(0, takeCount).forEach(q => {
+                    mixed.push({
+                        ...q,
+                        categoryTitle: cat.title,
+                        prompt: cat.prompt
+                    });
+                });
+            });
+            return mixed.sort(() => Math.random() - 0.5);
+        }
+
+        function hideAllScreens() {
+            startScreen.classList.add('hidden');
+            quizScreen.classList.add('hidden');
+            resultsScreen.classList.add('hidden');
+            hostScreen.classList.add('hidden');
+            editorScreen.classList.add('hidden');
+        }
+
+        function goToStartScreen() {
+            hideAllScreens();
+            startScreen.classList.remove('hidden');
+        }
+
+        // Запуск квиза
+        function startQuiz() {
+            const nameInput = document.getElementById('player-name').value.trim();
+            if (!nameInput) return;
+
+            playerName = nameInput;
+            document.getElementById('display-player-name').textContent = playerName;
+
+            activeQuestions = buildQuestionsForCategory(selectedCategoryKey);
+            totalQNumEl.textContent = activeQuestions.length;
+
+            hideAllScreens();
+            quizScreen.classList.remove('hidden');
+
+            currentQuestionIdx = 0;
+            score = 0;
+            liveScoreEl.textContent = "0";
+            quizStartTime = Date.now();
+            loadQuestion();
+        }
+
+        // Загрузка текущего вопроса
+        function loadQuestion() {
+            answered = false;
+            hintUsed = false;
+
+            const q = activeQuestions[currentQuestionIdx];
+            currentQNumEl.textContent = currentQuestionIdx + 1;
+            progressBar.style.width = `${(currentQuestionIdx / activeQuestions.length) * 100}%`;
+
+            document.getElementById('active-category-badge').textContent = q.categoryTitle;
+            document.getElementById('question-prompt').textContent = q.prompt;
+
+            animalImg.src = q.closeUrl;
+            zoomStatus.textContent = "МАКРО КРУПНЫЙ ПЛАН";
+            zoomIcon.className = "fa-solid fa-magnifying-glass-plus animate-pulse";
+
+            hintBtn.disabled = false;
+            hintBtn.classList.remove('opacity-40', 'cursor-not-allowed');
+
+            factCard.classList.add('hidden');
+
+            const nextBtnText = document.getElementById('next-btn-text');
+            nextBtnText.textContent = currentQuestionIdx === activeQuestions.length - 1
+                ? "ЗАВЕРШИТЬ ТЕСТ И УЗНАТЬ РЕЗУЛЬТАТ"
+                : "СЛЕДУЮЩИЙ ВОПРОС";
+
+            optionsContainer.innerHTML = '';
+            const russianLetters = ['А', 'Б', 'В', 'Г'];
+
+            q.options.forEach((optText, index) => {
+                const btn = document.createElement('button');
+                btn.className = `option-btn w-full p-4 rounded-xl text-left bg-natgeo-dark/90 hover:bg-natgeo-slate border border-natgeo-cardBorder text-white text-sm sm:text-base font-semibold transition-all duration-200 flex items-center justify-between group cursor-pointer`;
+                btn.onclick = () => handleAnswerSelect(index);
+
+                btn.innerHTML = `
+                    <span class="flex items-center gap-3">
+                        <span class="w-7 h-7 rounded-full bg-natgeo-card flex items-center justify-center text-xs text-natgeo-yellow font-bold border border-natgeo-cardBorder group-hover:border-natgeo-yellow transition-colors">
+                            ${russianLetters[index] || (index + 1)}
+                        </span>
+                        <span>${optText}</span>
+                    </span>
+                    <i class="fa-solid fa-circle-check text-natgeo-yellow opacity-0 group-hover:opacity-40 transition-opacity"></i>
+                `;
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        // Подсказка 50/50
+        function useHint() {
+            if (answered || hintUsed) return;
+            hintUsed = true;
+
+            const q = activeQuestions[currentQuestionIdx];
+            const wrongIndices = [];
+            q.options.forEach((_, idx) => {
+                if (idx !== q.correct) wrongIndices.push(idx);
+            });
+            wrongIndices.sort(() => Math.random() - 0.5);
+
+            const buttons = optionsContainer.querySelectorAll('.option-btn');
+            wrongIndices.slice(0, 2).forEach(idx => {
+                buttons[idx].classList.add('opacity-20', 'pointer-events-none');
+            });
+
+            hintBtn.disabled = true;
+            hintBtn.classList.add('opacity-40', 'cursor-not-allowed');
+        }
+
+        // Обработка выбора варианта ответа
+        function handleAnswerSelect(selectedIndex) {
+            if (answered) return;
+            answered = true;
+
+            const q = activeQuestions[currentQuestionIdx];
+            const isCorrect = selectedIndex === q.correct;
+            const buttons = optionsContainer.querySelectorAll('.option-btn');
+
+            if (isCorrect) {
+                score++;
+                liveScoreEl.textContent = score;
+            }
+
+            // Показываем полный кадр животного
+            animalImg.src = q.fullUrl;
+            zoomStatus.textContent = "ПОЛНЫЙ КАДР";
+            zoomIcon.className = "fa-solid fa-expand text-emerald-400";
+
+            buttons.forEach((btn, idx) => {
+                btn.classList.add('pointer-events-none');
+                if (idx === q.correct) {
+                    btn.classList.remove('bg-natgeo-dark/90', 'border-natgeo-cardBorder');
+                    btn.classList.add('bg-emerald-950/80', 'border-emerald-500', 'text-emerald-200');
+                    btn.querySelector('.fa-circle-check').classList.remove('opacity-0');
+                    btn.querySelector('.fa-circle-check').classList.add('opacity-100', 'text-emerald-400');
+                } else if (idx === selectedIndex && !isCorrect) {
+                    btn.classList.remove('bg-natgeo-dark/90', 'border-natgeo-cardBorder');
+                    btn.classList.add('bg-rose-950/80', 'border-rose-500', 'text-rose-200');
+                    btn.innerHTML += `<i class="fa-solid fa-circle-xmark text-rose-400 text-lg"></i>`;
+                } else {
+                    btn.classList.add('opacity-30');
+                }
+            });
+
+            factTitle.textContent = isCorrect ? `Верно! Это ${q.name}` : `Неверно! Это ${q.name}`;
+            factTitle.className = `font-bold text-base sm:text-lg font-oswald ${isCorrect ? 'text-emerald-400' : 'text-rose-400'}`;
+            factText.textContent = q.fact;
+            factCard.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQuestionIdx++;
+            if (currentQuestionIdx < activeQuestions.length) {
+                loadQuestion();
+            } else {
+                finishQuiz();
+            }
+        }
+
+        // Завершение теста
+        function finishQuiz() {
+            const timeSeconds = Math.max(1, Math.round((Date.now() - quizStartTime) / 1000));
+            const categoryTitle = selectedCategoryKey === 'mix'
+                ? "Все рубрики (Микс)"
+                : quizCategories[selectedCategoryKey].title;
+
+            hideAllScreens();
+            resultsScreen.classList.remove('hidden');
+
+            document.getElementById('result-category-badge').textContent = categoryTitle;
+            document.getElementById('final-score').textContent = `${score} / ${activeQuestions.length}`;
+            document.getElementById('final-player-name').textContent = playerName;
+
+            const mins = Math.floor(timeSeconds / 60);
+            const secs = timeSeconds % 60;
+            document.getElementById('final-time').textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+            if (window.savePlayerResult) {
+                window.savePlayerResult(playerName, score, activeQuestions.length, timeSeconds, selectedCategoryKey, categoryTitle);
+            }
+        }
+
+        function restartQuiz() {
+            hideAllScreens();
+            startScreen.classList.remove('hidden');
+        }
+
+        // Экран ведущего и таблица лидеров
+        function toggleHostMode() {
+            hideAllScreens();
+            hostScreen.classList.remove('hidden');
+
+            if (!qrGenerated) {
+                generateQRCode();
+                qrGenerated = true;
+            }
+            renderLeaderboardUI();
+        }
+
+        function closeHostMode() {
+            hideAllScreens();
+            startScreen.classList.remove('hidden');
+        }
+
+        function generateQRCode() {
+            const qrContainer = document.getElementById('qrcode-container');
+            qrContainer.innerHTML = '';
+
+            new QRCode(qrContainer, {
+                text: window.location.href,
+                width: 160,
+                height: 160,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+
+        function setLeaderboardFilter(filterKey) {
+            currentLeaderboardFilter = filterKey;
+            document.querySelectorAll('.lb-filter-btn').forEach(btn => {
+                const isSelected = btn.dataset.filter === filterKey;
+                btn.className = isSelected
+                    ? "lb-filter-btn px-2.5 py-1 rounded-md text-xs font-bold bg-natgeo-yellow text-black transition-all cursor-pointer"
+                    : "lb-filter-btn px-2.5 py-1 rounded-md text-xs font-bold bg-natgeo-slate text-natgeo-textMuted hover:text-white transition-all cursor-pointer";
+            });
+            renderLeaderboardUI();
+        }
+
+        window.updateLeaderboardData = function(results) {
+            allLeaderboardResults = [...results];
+            renderLeaderboardUI();
+        };
+
+        function renderLeaderboardUI() {
+            const tbody = document.getElementById('leaderboard-body');
+            const totalPlayersCount = document.getElementById('total-players-count');
+            const winnerName = document.getElementById('winner-name');
+            const winnerCategoryLabel = document.getElementById('winner-category-label');
+            const winnerScore = document.getElementById('winner-score');
+            const winnerTime = document.getElementById('winner-time');
+
+            // Фильтрация по рубрике
+            let filtered = currentLeaderboardFilter === 'all'
+                ? [...allLeaderboardResults]
+                : allLeaderboardResults.filter(r => r.categoryKey === currentLeaderboardFilter);
+
+            // Сортировка: сначала по проценту/количеству очков, затем по наименьшему времени
+            filtered.sort((a, b) => {
+                if (b.score !== a.score) return b.score - a.score;
+                return (a.timeSeconds || 9999) - (b.timeSeconds || 9999);
+            });
+
+            totalPlayersCount.textContent = filtered.length;
+            tbody.innerHTML = '';
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-natgeo-textMuted text-xs">Таблица пуста. Ожидание участников...</td></tr>`;
+                winnerName.textContent = "Ожидание участников...";
+                winnerCategoryLabel.textContent = "";
+                winnerScore.textContent = "-";
+                winnerTime.textContent = "--:--";
+                return;
+            }
+
+            const winner = filtered[0];
+            winnerName.textContent = winner.playerName;
+            winnerCategoryLabel.textContent = `Рубрика: ${winner.categoryTitle || 'Квиз'}`;
+            winnerScore.textContent = `${winner.score} / ${winner.totalQuestions || 5}`;
+            const wMins = Math.floor((winner.timeSeconds || 0) / 60);
+            const wSecs = (winner.timeSeconds || 0) % 60;
+            winnerTime.textContent = `Время: ${wMins.toString().padStart(2, '0')}:${wSecs.toString().padStart(2, '0')}`;
+
+            filtered.forEach((row, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = idx === 0 ? "bg-natgeo-yellow/10 font-bold" : "hover:bg-natgeo-slate/50 transition-colors";
+
+                const mins = Math.floor((row.timeSeconds || 0) / 60);
+                const secs = (row.timeSeconds || 0) % 60;
+                const timeFormatted = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+                let rankBadge = `${idx + 1}`;
+                if (idx === 0) rankBadge = `<i class="fa-solid fa-crown text-natgeo-yellow text-base"></i>`;
+                else if (idx === 1) rankBadge = `<i class="fa-solid fa-medal text-slate-300"></i>`;
+                else if (idx === 2) rankBadge = `<i class="fa-solid fa-medal text-amber-600"></i>`;
+
+                tr.innerHTML = `
+                    <td class="py-3 px-4 text-center font-oswald text-base">${rankBadge}</td>
+                    <td class="py-3 px-4 font-semibold text-white">
+                        <div class="flex items-center gap-2">
+                            <span>${row.playerName}</span>
+                            ${idx === 0 ? '<span class="text-[10px] px-1.5 py-0.5 rounded bg-natgeo-yellow text-black uppercase font-extrabold">Лидер</span>' : ''}
+                        </div>
+                    </td>
+                    <td class="py-3 px-4 text-xs text-gray-300">
+                        <span class="px-2 py-0.5 rounded bg-natgeo-slate border border-natgeo-cardBorder">${row.categoryTitle || 'Квиз'}</span>
+                    </td>
+                    <td class="py-3 px-4 text-center font-oswald text-natgeo-yellow text-base font-bold">${row.score} / ${row.totalQuestions || 5}</td>
+                    <td class="py-3 px-4 text-center text-xs text-natgeo-textMuted">${timeFormatted}</td>
+                    <td class="py-3 px-4 text-right text-xs text-natgeo-textMuted">${row.dateString || '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function confirmClearLeaderboard() {
+            showCustomModal({
+                title: "Сброс таблицы лидеров",
+                message: "Вы уверены, что хотите удалить все результаты участников из таблицы лидеров?",
+                icon: "fa-triangle-exclamation",
+                confirmText: "Да, очистить",
+                cancelText: "Отмена",
+                onConfirm: () => {
+                    if (window.clearLeaderboard) window.clearLeaderboard();
+                }
+            });
+        }
+
+        // Экспорт результатов в CSV
+        function exportToCSV() {
+            if (allLeaderboardResults.length === 0) {
+                showCustomModal({
+                    title: "Нет данных",
+                    message: "Таблица участников пока пуста. Пройдите тест, чтобы появились данные для экспорта.",
+                    icon: "fa-circle-info"
+                });
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+            csvContent += "Место,Имя,Рубрика,Очки,Всего вопросов,Время (сек),Дата\n";
+
+            const sorted = [...allLeaderboardResults].sort((a, b) => {
+                if (b.score !== a.score) return b.score - a.score;
+                return (a.timeSeconds || 9999) - (b.timeSeconds || 9999);
+            });
+
+            sorted.forEach((r, idx) => {
+                csvContent += `${idx + 1},"${r.playerName}","${r.categoryTitle || ''}",${r.score},${r.totalQuestions || 5},${r.timeSeconds},"${r.dateString || ''}"\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "NatGeo_PhotoArk_Quiz_Results.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // ============================================================================
+        // ВСТРОЕННЫЙ РЕДАКТОР КАРТИНОК (ЧТОБЫ ПОЛЬЗОВАТЕЛЬНИЦА МОГЛА ЛЕГКО ВСТАВИТЬ СВОИ ФОТО)
+        // ============================================================================
+        let currentEditorCategory = "clothes";
+
+        function togglePhotoEditor() {
+            if (!editorScreen.classList.contains('hidden')) {
+                closePhotoEditor();
+                return;
+            }
+            hideAllScreens();
+            editorScreen.classList.remove('hidden');
+            renderEditorCategory(currentEditorCategory);
+        }
+
+        function closePhotoEditor() {
+            hideAllScreens();
+            startScreen.classList.remove('hidden');
+        }
+
+        function renderEditorCategory(catKey) {
+            currentEditorCategory = catKey;
+
+            document.querySelectorAll('.ed-tab-btn').forEach(btn => {
+                const isSelected = btn.dataset.edCat === catKey;
+                btn.className = isSelected
+                    ? "ed-tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-natgeo-yellow text-black cursor-pointer"
+                    : "ed-tab-btn px-4 py-2 rounded-xl text-xs font-bold bg-natgeo-card border border-natgeo-cardBorder text-white hover:border-natgeo-yellow cursor-pointer";
+            });
+
+            const container = document.getElementById('editor-questions-list');
+            container.innerHTML = '';
+
+            const cat = quizCategories[catKey];
+            cat.questions.forEach((q, idx) => {
+                const card = document.createElement('div');
+                card.className = "bg-natgeo-card border border-natgeo-cardBorder rounded-2xl p-4 sm:p-5 space-y-4";
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-natgeo-cardBorder pb-2">
+                        <h4 class="font-bold text-white font-oswald text-base">
+                            Вопрос #${idx + 1}: <span class="text-natgeo-yellow">${q.name}</span>
+                        </h4>
+                        <span class="text-xs text-natgeo-textMuted">${cat.title}</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Картинка 1: Крупный план -->
+                        <div class="space-y-2">
+                            <label class="block text-xs font-bold text-natgeo-yellow uppercase">1. Макро крупный план (до ответа)</label>
+                            <div class="flex items-center gap-3">
+                                <img id="preview-close-${catKey}-${idx}" src="${q.closeUrl}" onerror="handleImageFallback(this)"
+                                    class="w-20 h-20 rounded-lg object-cover border border-natgeo-cardBorder bg-black flex-shrink-0">
+                                <div class="flex-grow space-y-2">
+                                    <input type="text" value="${q.closeUrl.startsWith('data:') ? '[Загруженный файл]' : q.closeUrl}"
+                                        onchange="updateQuestionImageUrl('${catKey}', ${idx}, 'closeUrl', this.value)"
+                                        placeholder="Вставьте ссылку https://... или путь"
+                                        class="w-full px-3 py-2 bg-natgeo-dark border border-natgeo-cardBorder rounded-lg text-xs text-white focus:outline-none focus:border-natgeo-yellow">
+                                    <label class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-natgeo-slate hover:bg-natgeo-cardBorder text-xs text-gray-200 font-semibold cursor-pointer">
+                                        <i class="fa-solid fa-upload text-natgeo-yellow"></i>
+                                        <span>Выбрать файл с устройства</span>
+                                        <input type="file" accept="image/*" class="hidden" onchange="handleLocalFileUpload(event, '${catKey}', ${idx}, 'closeUrl')">
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Картинка 2: Полный кадр -->
+                        <div class="space-y-2">
+                            <label class="block text-xs font-bold text-emerald-400 uppercase">2. Полный кадр (после ответа)</label>
+                            <div class="flex items-center gap-3">
+                                <img id="preview-full-${catKey}-${idx}" src="${q.fullUrl}" onerror="handleImageFallback(this)"
+                                    class="w-20 h-20 rounded-lg object-cover border border-natgeo-cardBorder bg-black flex-shrink-0">
+                                <div class="flex-grow space-y-2">
+                                    <input type="text" value="${q.fullUrl.startsWith('data:') ? '[Загруженный файл]' : q.fullUrl}"
+                                        onchange="updateQuestionImageUrl('${catKey}', ${idx}, 'fullUrl', this.value)"
+                                        placeholder="Вставьте ссылку https://... или путь"
+                                        class="w-full px-3 py-2 bg-natgeo-dark border border-natgeo-cardBorder rounded-lg text-xs text-white focus:outline-none focus:border-natgeo-yellow">
+                                    <label class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-natgeo-slate hover:bg-natgeo-cardBorder text-xs text-gray-200 font-semibold cursor-pointer">
+                                        <i class="fa-solid fa-upload text-emerald-400"></i>
+                                        <span>Выбрать файл с устройства</span>
+                                        <input type="file" accept="image/*" class="hidden" onchange="handleLocalFileUpload(event, '${catKey}', ${idx}, 'fullUrl')">
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function updateQuestionImageUrl(catKey, idx, field, newUrl) {
+            if (!newUrl || newUrl === '[Загруженный файл]') return;
+            quizCategories[catKey].questions[idx][field] = newUrl.trim();
+            const previewId = field === 'closeUrl' ? `preview-close-${catKey}-${idx}` : `preview-full-${catKey}-${idx}`;
+            const imgEl = document.getElementById(previewId);
+            if (imgEl) imgEl.src = newUrl.trim();
+        }
+
+        function handleLocalFileUpload(event, catKey, idx, field) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const objectUrl = URL.createObjectURL(file);
+            quizCategories[catKey].questions[idx][field] = objectUrl;
+            const previewId = field === 'closeUrl' ? `preview-close-${catKey}-${idx}` : `preview-full-${catKey}-${idx}`;
+            const imgEl = document.getElementById(previewId);
+            if (imgEl) imgEl.src = objectUrl;
+        }
+
+        function resetCustomImages() {
+            Object.keys(defaultQuizCategories).forEach(key => {
+                quizCategories[key].questions = JSON.parse(JSON.stringify(defaultQuizCategories[key].questions));
+            });
+            renderEditorCategory(currentEditorCategory);
+            showCustomModal({
+                title: "Фотографии восстановлены",
+                message: "Все изображения во всех рубриках возвращены к исходным значениям.",
+                icon: "fa-circle-check"
+            });
+        }
+
+        window.onload = () => {
+            selectCategory('clothes');
+        };
+    </script>
+</body>
+</html>
